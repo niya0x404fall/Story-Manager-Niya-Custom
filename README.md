@@ -1,4 +1,4 @@
-# Story Manager
+# Story Manager · Niya Custom
 
 Расширение для [SillyTavern](https://sillytavern.app/), которое помогает **собирать и хранить сюжет** из переписки: заметки, персонажей, локации и краткий пересказ (саммари).
 
@@ -23,11 +23,23 @@
 2. Нажми **Install extension** (установить расширение).
 3. Вставь ссылку на репозиторий:
   ```
-   https://github.com/SaraSardis/Story-Manager
+   https://github.com/niya0x404fall/Story-Manager-Niya-Custom
   ```
 4. Дождись установки и перезагрузи страницу при необходимости.
 
 **Обновление:** Extensions → **Manage extensions** → найди Story Manager → **Update**.
+
+### Переход с оригинального Story Manager
+
+Если у вас уже установлен оригинальный Story Manager:
+
+1. Удалите оригинальное расширение через управление расширениями SillyTavern.
+2. Установите Story Manager · Niya Custom по ссылке выше.
+3. Полностью перезапустите SillyTavern.
+4. Откройте прежний чат.
+
+Заметки, персонажи, локации и саммари, сохранённые оригинальным Story Manager в данных чата, должны подхватиться автоматически.
+> Рекомендуется сделать резервную копию важных чатов перед заменой расширения.
 
 ---
 
@@ -179,3 +191,15 @@ style.css             — стили
 Честно: Story Manager — продукт **вайбкодинга**. Я не претендую на что-то принципиально новое — я просто **собрала и доработала на свой вкус** то, что мне нравится в экосистеме SillyTavern, и сделала то, **чем сама хотела бы пользоваться** каждый день.
 
 Где-то код неидеален, где-то логика могла бы быть лучше — я это понимаю и постепенно учусь. Буду рада, если вы отнесётесь ко мне **с пониманием**. Спасибо, что попробовали моё расширение.
+
+---
+
+## Credits
+
+Original Story Manager by LAO
+
+Story Manager · Niya Custom is based on the original Story Manager and was modified with permission from the original author.
+
+Original project: https://github.com/SaraSardis/Story-Manager
+
+Thank you to LAO for creating Story Manager and for allowing modifications to the project. ♡
