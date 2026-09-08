@@ -1,0 +1,348 @@
+<template id="story-manager-summary-source-popup-template">
+  <div class="story-manager-prompts-popup story-manager-summary-confirm-popup story-summary-source-popup">
+    <div class="story-manager-prompts-popup-backdrop"></div>
+    <div class="story-manager-prompts-popup-panel story-manager-summary-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="story-summary-source-title">
+      <div class="story-manager-summary-confirm-body">
+        <div id="story-summary-source-title" class="story-manager-summary-confirm-title story-summary-source-title"></div>
+        <p class="story-manager-summary-confirm-text">Выбор варианта отправит один запрос к модели. Скрытие сообщений само по себе не требует пересборки.</p>
+        <p class="story-summary-source-legacy story-summary-source-hint">У этой карточки не сохранён точный состав исходников. Выберите, какие сообщения использовать теперь.</p>
+        <div class="story-summary-source-choices"></div>
+      </div>
+      <div class="story-manager-summary-confirm-footer">
+        <button type="button" class="menu_button story-summary-source-cancel">Отмена — оставить карточку</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="story-manager-prompts-popup-template">
+  <div id="story_manager_prompts_popup" class="story-manager-prompts-popup">
+    <div class="story-manager-prompts-popup-backdrop"></div>
+    <div class="story-manager-prompts-popup-panel" role="dialog" aria-modal="true">
+      <div class="story-manager-prompts-popup-header">
+        <b>Менеджер системных промптов</b>
+        <span
+          class="fa-solid fa-xmark story-manager-prompts-close"
+          title="Закрыть"
+          role="button"
+          tabindex="0"
+        ></span>
+      </div>
+      <div class="story-manager-prompts-popup-body">
+        <div class="story-manager-prompt-block">
+          <div class="story-manager-prompt-block-header">
+            <label><b>Промпт для заметок</b></label>
+            <button
+              type="button"
+              class="menu_button"
+              data-prompt-reset="notePrompt"
+              title="Сбросить"
+            >
+              🔄
+            </button>
+          </div>
+          <textarea
+            class="text_pole"
+            rows="6"
+            data-prompt-key="notePrompt"
+            aria-label="Промпт для заметок"
+            placeholder="Промпт для заметок"
+          ></textarea>
+        </div>
+
+        <div class="story-manager-prompt-block">
+          <div class="story-manager-prompt-block-header">
+            <label><b>Промпт для персонажей</b></label>
+            <button
+              type="button"
+              class="menu_button"
+              data-prompt-reset="characterPrompt"
+              title="Сбросить"
+            >
+              🔄
+            </button>
+          </div>
+          <textarea
+            class="text_pole"
+            rows="8"
+            data-prompt-key="characterPrompt"
+            aria-label="Промпт для персонажей"
+            placeholder="Промпт для персонажей"
+          ></textarea>
+        </div>
+
+        <div class="story-manager-prompt-block">
+          <div class="story-manager-prompt-block-header">
+            <label><b>Промпт для локаций</b></label>
+            <button
+              type="button"
+              class="menu_button"
+              data-prompt-reset="locationPrompt"
+              title="Сбросить"
+            >
+              🔄
+            </button>
+          </div>
+          <textarea
+            class="text_pole"
+            rows="8"
+            data-prompt-key="locationPrompt"
+            aria-label="Промпт для локаций"
+            placeholder="Промпт для локаций"
+          ></textarea>
+        </div>
+
+        <div class="story-manager-prompt-block">
+          <div class="story-manager-prompt-block-header">
+            <label><b>Промпт для создания саммари</b></label>
+            <button
+              type="button"
+              class="menu_button"
+              data-prompt-reset="summaryPrompt"
+              title="Сбросить"
+            >
+              🔄
+            </button>
+          </div>
+          <textarea
+            class="text_pole"
+            rows="8"
+            data-prompt-key="summaryPrompt"
+            aria-label="Промпт для создания саммари"
+            placeholder="Промпт для создания саммари"
+          ></textarea>
+        </div>
+
+        <div class="story-manager-prompt-block">
+          <div class="story-manager-prompt-block-header">
+            <label><b>Промпт для сжатия саммари</b></label>
+            <button
+              type="button"
+              class="menu_button"
+              data-prompt-reset="summaryCompressPrompt"
+              title="Сбросить"
+            >
+              🔄
+            </button>
+          </div>
+          <textarea
+            class="text_pole"
+            rows="6"
+            data-prompt-key="summaryCompressPrompt"
+            aria-label="Промпт для сжатия саммари"
+            placeholder="Промпт для сжатия саммари"
+          ></textarea>
+        </div>
+      </div>
+      <div class="story-manager-prompts-popup-footer">
+        <button
+          id="story_manager_prompts_reset_all"
+          type="button"
+          class="menu_button"
+        >
+          🔄 Сбросить все промпты
+        </button>
+        <button
+          type="button"
+          class="menu_button story-manager-prompts-close"
+        >
+          Закрыть
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="story-manager-data-import-popup-template">
+  <div id="story_manager_data_import_popup" class="story-manager-prompts-popup story-manager-summary-confirm-popup">
+    <div class="story-manager-prompts-popup-backdrop story-manager-data-import-backdrop"></div>
+    <div class="story-manager-prompts-popup-panel story-manager-summary-confirm-panel" role="dialog" aria-modal="true">
+      <div class="story-manager-summary-confirm-body">
+        <div class="story-manager-summary-confirm-title">📂 Импорт Story Manager</div>
+        <p class="story-manager-summary-confirm-text">
+          Файл: <b id="story-manager-data-import-file-name"></b>
+        </p>
+        <p id="story-manager-data-import-stats" class="story-manager-summary-confirm-info"></p>
+
+        <fieldset class="story-manager-data-import-options">
+          <legend>Что сделать с текущими записями?</legend>
+          <label class="story-manager-data-import-option">
+            <input type="radio" name="story_manager_import_mode" value="merge" checked />
+            <span><b>Объединить</b><small>Текущие записи сохранятся, отсутствующие добавятся.</small></span>
+          </label>
+          <label class="story-manager-data-import-option">
+            <input type="radio" name="story_manager_import_mode" value="replace" />
+            <span><b>Полностью заменить</b><small>Все данные Story Manager в текущем чате будут удалены и заменены файлом.</small></span>
+          </label>
+        </fieldset>
+
+        <label class="story-manager-inline-toggle story-manager-data-import-settings-row" for="story_manager_import_settings">
+          <input type="checkbox" id="story_manager_import_settings" />
+          <span>Также восстановить промпты и общие настройки</span>
+        </label>
+        <p class="story-manager-hint story-manager-data-import-hint">
+          Профиль подключения и лорбук не переносятся: они могут называться иначе на другом устройстве.
+        </p>
+      </div>
+      <div class="story-manager-summary-confirm-footer">
+        <button type="button" class="menu_button story-manager-data-import-close">❌ Отмена</button>
+        <button type="button" id="story-manager-data-import-confirm-btn" class="menu_button">✅ Импортировать</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="story-manager-summary-rebuild-popup-template">
+  <div id="story_manager_summary_rebuild_popup" class="story-manager-prompts-popup story-manager-summary-confirm-popup">
+    <div class="story-manager-prompts-popup-backdrop story-summary-rebuild-backdrop"></div>
+    <div class="story-manager-prompts-popup-panel story-manager-summary-confirm-panel" role="dialog" aria-modal="true">
+      <div class="story-manager-summary-confirm-body">
+        <div class="story-manager-summary-confirm-title">📖 Саммари с нуля</div>
+        <p class="story-manager-summary-confirm-text">
+          Все текущие карточки будут удалены. История чата будет пересказана заново по вашему интервалу.
+        </p>
+        <p id="story-summary-rebuild-request-info" class="story-manager-summary-confirm-info"></p>
+        <p class="story-manager-summary-confirm-hint story-summary-rebuild-date-hint">
+          Дата и время берутся из текста ролевой. Начальную дату ниже можно указать дополнительно, если её нет в истории.
+        </p>
+        <div class="story-summary-rebuild-date-fields" role="group" aria-label="Дата начала событий">
+          <label class="story-summary-rebuild-date-field">
+            <span class="story-summary-rebuild-date-label">день</span>
+            <input
+              type="text"
+              inputmode="numeric"
+              id="story-summary-rebuild-start-day"
+              class="text_pole story-summary-rebuild-date-input"
+              maxlength="2"
+              autocomplete="off"
+            />
+          </label>
+          <label class="story-summary-rebuild-date-field">
+            <span class="story-summary-rebuild-date-label">месяц</span>
+            <input
+              type="text"
+              inputmode="numeric"
+              id="story-summary-rebuild-start-month"
+              class="text_pole story-summary-rebuild-date-input"
+              maxlength="2"
+              autocomplete="off"
+            />
+          </label>
+          <label class="story-summary-rebuild-date-field">
+            <span class="story-summary-rebuild-date-label">год</span>
+            <input
+              type="text"
+              inputmode="numeric"
+              id="story-summary-rebuild-start-year"
+              class="text_pole story-summary-rebuild-date-input"
+              maxlength="4"
+              autocomplete="off"
+            />
+          </label>
+        </div>
+      </div>
+      <div class="story-manager-summary-confirm-footer">
+        <button type="button" class="menu_button story-summary-rebuild-close">
+          ❌ Не делать
+        </button>
+        <button type="button" id="story-summary-rebuild-confirm-btn" class="menu_button">
+          ✅ Сделать
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="story-manager-summary-fill-gaps-popup-template">
+  <div id="story_manager_summary_fill_gaps_popup" class="story-manager-prompts-popup story-manager-summary-confirm-popup">
+    <div class="story-manager-prompts-popup-backdrop story-summary-fill-gaps-backdrop"></div>
+    <div class="story-manager-prompts-popup-panel story-manager-summary-confirm-panel" role="dialog" aria-modal="true">
+      <div class="story-manager-summary-confirm-body">
+        <div class="story-manager-summary-confirm-title">🧩 Заполнить пробелы</div>
+        <p class="story-manager-summary-confirm-text">
+          Будут созданы карточки только для участков истории без саммари.
+          Существующие карточки останутся без изменений.
+        </p>
+        <p id="story-summary-fill-gaps-request-info" class="story-manager-summary-confirm-info"></p>
+        <p id="story-summary-fill-gaps-ranges-info" class="story-manager-summary-confirm-info story-summary-fill-gaps-ranges"></p>
+      </div>
+      <div class="story-manager-summary-confirm-footer">
+        <button type="button" class="menu_button story-summary-fill-gaps-close">
+          ❌ Не делать
+        </button>
+        <button type="button" id="story-summary-fill-gaps-confirm-btn" class="menu_button">
+          ✅ Заполнить
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="story-manager-summary-import-builtin-popup-template">
+  <div id="story_manager_summary_import_builtin_popup" class="story-manager-prompts-popup story-manager-summary-confirm-popup">
+    <div class="story-manager-prompts-popup-backdrop story-summary-import-builtin-backdrop"></div>
+    <div class="story-manager-prompts-popup-panel story-manager-summary-confirm-panel" role="dialog" aria-modal="true">
+      <div class="story-manager-summary-confirm-body">
+        <div class="story-manager-summary-confirm-title">📥 Подтянуть из Саммари</div>
+        <p id="story-summary-import-builtin-desc" class="story-manager-summary-confirm-text"></p>
+      </div>
+      <div class="story-manager-summary-confirm-footer">
+        <button type="button" class="menu_button story-summary-import-builtin-close">
+          ❌ Не делать
+        </button>
+        <button type="button" id="story-summary-import-builtin-confirm-btn" class="menu_button">
+          ✅ Подтянуть
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="story-manager-image-preset-popup-template">
+  <div id="story_manager_image_preset_popup" class="story-manager-prompts-popup">
+    <div class="story-manager-image-preset-popup-backdrop story-manager-prompts-popup-backdrop"></div>
+    <div class="story-manager-prompts-popup-panel" role="dialog">
+      <div class="story-manager-prompts-popup-header">
+        <b>Пресет картинок</b>
+        <span class="fa-solid fa-xmark story-manager-image-preset-close"></span>
+      </div>
+      <div class="story-manager-prompts-popup-body">
+        <input type="hidden" id="story_image_preset_id" />
+        <div class="story-manager-block">
+          <label><b>Название</b></label>
+          <input type="text" id="story_image_preset_name" class="text_pole" />
+        </div>
+        <div class="story-manager-block">
+          <label><b>Пар контекста (user+bot)</b></label>
+          <input type="number" id="story_image_preset_context_pairs" class="text_pole" min="1" max="20" value="4" />
+        </div>
+        <div class="story-manager-prompt-block">
+          <label for="story_image_preset_instruction"><b>Инструкция</b></label>
+          <p
+            id="story_image_preset_imagen_hint"
+            class="story-manager-hint story-manager-image-preset-imagen-hint"
+          >
+            Весь HTML-блок оберните в теги &lt;imagen&gt;...&lt;/imagen&gt;.
+          </p>
+          <textarea
+            id="story_image_preset_instruction"
+            class="text_pole"
+            rows="18"
+            aria-describedby="story_image_preset_imagen_hint"
+          ></textarea>
+        </div>
+      </div>
+      <div class="story-manager-prompts-popup-footer">
+        <button
+          type="button"
+          id="story_image_preset_insert_default_btn"
+          class="menu_button"
+        >
+          📋 Подставить полный шаблон
+        </button>
+        <button type="button" id="story_image_preset_save_btn" class="menu_button">💾 Сохранить</button>
+        <button type="button" class="menu_button story-manager-image-preset-close">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</template>

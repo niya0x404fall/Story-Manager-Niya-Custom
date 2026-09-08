@@ -1,0 +1,12 @@
+{
+  "display_name": "Story Manager · Niya Custom",
+  "loading_order": 102,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "LAO",
+  "version": "0.4.5",
+  "homePage": "https://github.com/SaraSardis/Story-Manager",
+  "description": "Custom Story Manager with visible-message autosummary, preserved sources, story chronology, portable backup, and selective compression"
+}

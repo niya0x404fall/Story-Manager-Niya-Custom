@@ -1,0 +1,319 @@
+<template id="story-manager-settings-template">
+  <div id="story_manager_settings" class="inline-drawer">
+    <div class="inline-drawer-toggle inline-drawer-header">
+      <b>Story Manager</b>
+      <div
+        class="inline-drawer-icon fa-solid fa-circle-chevron-down down"
+      ></div>
+    </div>
+    <div class="inline-drawer-content">
+      <div class="story-manager-duplicate-install-warning story-manager-hidden" role="alert">
+        ⚠️ Найдено несколько копий Story Manager. Оставьте в папке third-party только одну, а резервные версии перенесите в другое место — иначе настройки и автосаммари могут срабатывать дважды.
+      </div>
+      <div class="story-manager-section">
+        <h3>⚙️ Общие настройки</h3>
+        <div class="story-manager-block">
+          <label for="story_manager_profile"
+            ><b>Профиль для генерации:</b></label
+          >
+          <select id="story_manager_profile" class="text_pole">
+            <option value="">Использовать текущий профиль</option>
+          </select>
+        </div>
+        <div class="story-manager-block story-manager-block--spaced-top">
+          <label for="story_manager_character_lorebook"
+            ><b>Лорбук для экспорта:</b></label
+          >
+          <select id="story_manager_character_lorebook" class="text_pole">
+            <option value="">Не выбран</option>
+          </select>
+        </div>
+        <div class="story-manager-block story-manager-block--spaced-top">
+          <button
+            id="story_manager_open_prompts_btn"
+            class="menu_button story-manager-btn-full"
+            type="button"
+          >
+            ⚙️ Менеджер системных промптов
+          </button>
+        </div>
+        <div class="story-manager-block story-summary-injection-settings">
+          <label for="story_manager_summary_injection_position">
+            <b>Место вставки саммари:</b>
+          </label>
+          <select id="story_manager_summary_injection_position" class="text_pole">
+            <option value="main_prompt">Main Prompt</option>
+            <option value="before_prompt">Перед Main Prompt</option>
+            <option value="chat_depth">В историю чата (Depth)</option>
+          </select>
+          <div class="story-summary-injection-extra">
+            <label class="story-summary-depth-field" for="story_manager_summary_injection_depth">
+              <span>Глубина:</span>
+              <input
+                type="number"
+                id="story_manager_summary_injection_depth"
+                class="text_pole story-manager-input-narrow"
+                min="0"
+                max="10000"
+              />
+            </label>
+            <label for="story_manager_summary_injection_role">
+              <span>Роль:</span>
+              <select id="story_manager_summary_injection_role" class="text_pole">
+                <option value="system">System</option>
+                <option value="user">User</option>
+                <option value="assistant">Assistant</option>
+              </select>
+            </label>
+          </div>
+          <p class="story-manager-hint story-summary-injection-hint">
+            Настройка влияет только на саммари. Заметки, персонажи и локации остаются в Main Prompt.
+          </p>
+          <p class="story-manager-hint story-summary-depth-hint">
+            Depth 0 — после всей истории; 1 — перед последним сообщением; 4 — перед четырьмя последними сообщениями.
+          </p>
+        </div>
+        <div class="story-manager-block story-manager-data-transfer">
+          <div class="story-manager-toolbar--wrap story-manager-data-transfer-actions">
+            <button id="story_manager_data_export_btn" class="menu_button" type="button">
+              💾 Экспорт данных
+            </button>
+            <button id="story_manager_data_import_btn" class="menu_button" type="button">
+              📂 Импорт данных
+            </button>
+          </div>
+          <input
+            id="story_manager_data_import_file"
+            class="story-manager-hidden"
+            type="file"
+            accept="application/json,.json"
+          />
+          <p class="story-manager-hint story-manager-data-transfer-hint">
+            Резервная копия записей текущего чата и переносимых настроек расширения.
+          </p>
+        </div>
+      </div>
+
+      <div class="story-manager-subsections">
+      <div class="story-manager-section">
+        <div class="inline-drawer story-manager-subsection">
+          <div class="inline-drawer-toggle inline-drawer-header">
+            <b>📝 Заметки из сообщений</b>
+            <div
+              class="inline-drawer-icon fa-solid fa-chevron-down down"
+            ></div>
+          </div>
+          <div class="inline-drawer-content">
+            <div id="story-notes-add-form-wrap" class="story-manager-hidden"></div>
+            <div class="story-manager-toolbar">
+              <button
+                id="story-notes-add-btn"
+                type="button"
+                class="menu_button"
+                title="Создать заметку вручную"
+              >
+                ➕ Добавить заметку
+              </button>
+            </div>
+            <h4>Ваши заметки:</h4>
+            <div id="story-notes-container">
+              <i>Здесь будут заметки...</i>
+            </div>
+            <span id="story-notes-token-count" class="story-entity-token-count">
+              0 токенов
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="story-manager-section">
+        <div class="inline-drawer story-manager-subsection">
+          <div class="inline-drawer-toggle inline-drawer-header">
+            <b>👤 Персонажи</b>
+            <div
+              class="inline-drawer-icon fa-solid fa-chevron-down down"
+            ></div>
+          </div>
+          <div class="inline-drawer-content">
+            <div class="story-manager-block">
+              <label for="story_manager_character_context"
+                ><b>Контекст для генерации:</b></label
+              >
+              <select id="story_manager_character_context" class="text_pole">
+                <option value="older">Брать более старые сообщения</option>
+                <option value="newer">Брать более новые сообщения</option>
+              </select>
+            </div>
+            <h4 class="story-manager-block--spaced-top">Карточки персонажей:</h4>
+            <div id="story-characters-container">
+              <i>Здесь будут персонажи...</i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="story-manager-section">
+        <div class="inline-drawer story-manager-subsection">
+          <div class="inline-drawer-toggle inline-drawer-header">
+            <b>📍 Локации</b>
+            <div
+              class="inline-drawer-icon fa-solid fa-chevron-down down"
+            ></div>
+          </div>
+          <div class="inline-drawer-content">
+            <div class="story-manager-block">
+              <label for="story_manager_location_context"
+                ><b>Контекст для генерации:</b></label
+              >
+              <select id="story_manager_location_context" class="text_pole">
+                <option value="older">Брать более старые сообщения</option>
+                <option value="newer">Брать более новые сообщения</option>
+              </select>
+            </div>
+            <h4 class="story-manager-block--spaced-top">Список локаций:</h4>
+            <div id="story-locations-container">
+              <i>Здесь будут локации...</i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="story-manager-section">
+        <div class="inline-drawer story-manager-subsection">
+          <div class="inline-drawer-toggle inline-drawer-header">
+            <b>📖 Саммари (Пересказ)</b>
+            <div
+              class="inline-drawer-icon fa-solid fa-chevron-down down"
+            ></div>
+          </div>
+          <div class="inline-drawer-content">
+            <div class="story-manager-block story-summary-enable-row">
+              <label class="story-manager-inline-toggle story-summary-context-enable-label" for="story_summary_enabled">
+                <input type="checkbox" id="story_summary_enabled" />
+                <b>💗 Использовать саммари в контексте</b>
+              </label>
+            </div>
+            <div class="story-manager-block story-manager-block--compact-top story-summary-auto-enable-row">
+              <label class="story-manager-inline-toggle story-summary-auto-enable-label" for="story_summary_auto_enabled">
+                <input type="checkbox" id="story_summary_auto_enabled" />
+                <b>🤖 Создавать саммари автоматически</b>
+              </label>
+            </div>
+            <div class="story-manager-block story-manager-block--compact-top story-summary-auto-interval">
+              <label for="story_manager_summary_interval">
+                <b>Периодичность автосаммари (видимых сообщений):</b>
+              </label>
+              <input
+                type="number"
+                id="story_manager_summary_interval"
+                class="text_pole story-manager-input-narrow"
+                min="1"
+                max="500"
+              />
+              <p class="story-manager-hint story-summary-auto-hint">
+                Считаются только новые видимые сообщения. Автосаммари запускается с вашим следующим сообщением и пересказывает принятую историю до него.
+              </p>
+            </div>
+
+            <h4 class="story-summary-chunks-heading">Карточки саммари:</h4>
+            <p class="story-manager-hint story-summary-selection-hint">
+              Первая галочка включает карточку в контекст; вторая отмечает её для сокращения.
+            </p>
+            <p class="story-manager-hint story-summary-stale-hint story-manager-hidden">
+              ⚠️ Красная карточка устарела: сообщения в её диапазоне отредактировали, заменили свайпом или удалили. Обычное hide/unhide на неё не влияет. Она не передаётся модели, пока вы не исправите её вручную или не пересоздадите. Сохранение через ✎ не вызывает запрос к модели.
+            </p>
+            <div id="story-summary-chunks-container">
+              <i>Здесь будет ваше саммари</i>
+            </div>
+            <span id="story-summary-token-count" class="story-summary-token-count">
+              0 токенов
+            </span>
+
+            <details class="story-manager-block story-summary-manual-range">
+              <summary class="menu_button story-summary-manual-range-title">✨ Создать по диапазону</summary>
+              <div class="story-summary-manual-range-panel">
+                <div class="story-summary-manual-range-fields">
+                  <label for="story_summary_manual_start">
+                    <span>Начало (mesid)</span>
+                    <input
+                      type="number"
+                      id="story_summary_manual_start"
+                      class="text_pole story-manager-input-narrow"
+                      min="0"
+                      step="1"
+                      placeholder="120"
+                    />
+                  </label>
+                  <label for="story_summary_manual_end">
+                    <span>Конец (mesid)</span>
+                    <input
+                      type="number"
+                      id="story_summary_manual_end"
+                      class="text_pole story-manager-input-narrow"
+                      min="0"
+                      step="1"
+                      placeholder="145"
+                    />
+                  </label>
+                  <button id="story-summary-manual-create-btn" type="button" class="menu_button">
+                    ✨ Создать
+                  </button>
+                </div>
+                <p class="story-manager-hint story-summary-manual-range-hint">
+                  Номера совпадают с mesid в SillyTavern; границы включаются в саммари.
+                </p>
+              </div>
+            </details>
+
+            <div class="story-summary-actions">
+              <button
+                id="story-summary-compress-btn"
+                type="button"
+                class="menu_button"
+                title="Сократить только отмеченные карточки"
+              >
+                🗜️ Сократить саммари
+              </button>
+              <button
+                id="story-summary-rebuild-btn"
+                type="button"
+                class="menu_button"
+                title="Пересоздать все карточки по всей истории чата"
+              >
+                📖 Сделать саммари с нуля
+              </button>
+            </div>
+            <div class="story-summary-actions">
+              <button
+                id="story-summary-import-builtin-btn"
+                type="button"
+                class="menu_button"
+                title="Импортировать текст из встроенного Summarize"
+              >
+                📥 Подтянуть из Саммари
+              </button>
+              <button
+                id="story-summary-fill-gaps-btn"
+                type="button"
+                class="menu_button"
+                title="Создать карточки для всех непокрытых участков истории"
+              >
+                🧩 Заполнить пробелы
+              </button>
+            </div>
+            <button
+              id="story-summary-rollback-btn"
+              type="button"
+              class="menu_button story-summary-rollback-btn story-manager-hidden"
+              title="Вернуть карточки до последнего сокращения"
+            >
+              ↩️ Отменить сокращение
+            </button>
+          </div>
+        </div>
+      </div>
+
+      </div>
+    </div>
+  </div>
+</template>

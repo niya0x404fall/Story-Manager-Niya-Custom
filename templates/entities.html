@@ -1,0 +1,172 @@
+<template id="story-manager-summary-chunk-item-template">
+  <div class="story-note-item story-summary-chunk-item">
+    <div class="story-note-header story-summary-chunk-header">
+      <input type="checkbox" class="story-summary-chunk-toggle-checkbox" checked />
+      <input
+        type="checkbox"
+        class="story-summary-chunk-select-checkbox"
+        title="Выбрать эту карточку для сокращения"
+        aria-label="Выбрать эту карточку для сокращения"
+      />
+      <span class="story-summary-chunk-title"></span>
+      <span
+        class="story-summary-chunk-stale-icon fa-solid fa-triangle-exclamation"
+        title="Сообщения в этом диапазоне изменены — карточка может быть недостоверна"
+      ></span>
+      <span
+        class="story-summary-chunk-uncovered-icon fa-solid fa-triangle-exclamation"
+        title="Эти сообщения не покрыты саммари"
+      ></span>
+      <span
+        class="story-summary-compressed-badge fa-solid fa-compress"
+        title="Сжатое саммари"
+      ></span>
+      <div class="story-note-actions">
+        <span
+          class="fa-solid fa-rotate story-summary-chunk-regenerate-btn"
+          title="Перегенерировать"
+        ></span>
+        <span class="fa-solid fa-pen story-summary-chunk-edit-btn"></span>
+        <span
+          class="fa-solid fa-trash story-summary-chunk-delete-btn"
+          title="Удалить карточку"
+        ></span>
+        <span
+          class="fa-solid fa-circle-chevron-down story-summary-chunk-toggle-expand"
+        ></span>
+      </div>
+    </div>
+    <div class="story-summary-chunk-body"></div>
+  </div>
+</template>
+
+<template id="story-manager-summary-chunk-edit-template">
+  <div class="story-summary-chunk-edit-form story-manager-edit-form">
+    <label><b>Текст саммари:</b></label>
+    <textarea
+      class="story-summary-chunk-body-edit text_pole story-manager-form-field"
+      rows="6"
+    ></textarea>
+    <div class="story-manager-form-actions">
+      <button type="button" class="story-summary-chunk-save-btn menu_button">
+        💾 Сохранить
+      </button>
+      <button type="button" class="story-summary-chunk-cancel-btn menu_button">
+        ❌ Отмена
+      </button>
+    </div>
+  </div>
+</template>
+
+<template id="story-manager-note-item-template">
+  <div class="story-note-item">
+    <div class="story-note-header">
+      <input type="checkbox" class="story-note-toggle-checkbox" checked />
+      <span class="story-note-title"></span>
+      <div class="story-note-actions">
+        <span class="fa-solid fa-pen story-note-edit-btn"></span>
+        <span class="fa-solid fa-trash story-note-delete-btn"></span>
+        <span
+          class="fa-solid fa-circle-chevron-down story-note-toggle-expand"
+        ></span>
+      </div>
+    </div>
+    <div class="story-note-body"></div>
+  </div>
+</template>
+
+<template id="story-manager-note-add-template">
+  <div class="story-note-add-form story-manager-block">
+    <label><b>Название:</b></label>
+    <input
+      type="text"
+      class="story-note-add-title text_pole story-manager-form-field"
+      placeholder="Название заметки"
+    />
+    <label><b>Текст заметки:</b></label>
+    <textarea
+      class="story-note-add-body text_pole story-manager-form-field"
+      rows="4"
+      placeholder="Содержание заметки"
+    ></textarea>
+    <div class="story-manager-form-actions">
+      <button type="button" class="story-note-add-save-btn menu_button">
+        💾 Сохранить
+      </button>
+      <button type="button" class="story-note-add-cancel-btn menu_button">
+        ❌ Отмена
+      </button>
+    </div>
+  </div>
+</template>
+
+<template id="story-manager-note-edit-template">
+  <div class="story-note-edit-form story-manager-edit-form">
+    <label for="story-note-body-edit"><b>Текст заметки:</b></label>
+    <textarea
+      class="story-note-body-edit text_pole story-manager-form-field--tight-bottom"
+      rows="4"
+    ></textarea>
+    <div class="story-manager-form-actions">
+      <button class="story-note-save-btn menu_button">💾 Сохранить</button>
+      <button class="story-note-cancel-btn menu_button">❌ Отмена</button>
+    </div>
+  </div>
+</template>
+
+<template id="story-manager-character-item-template">
+  <div class="story-note-item story-character-item">
+    <div class="story-note-header">
+      <input type="checkbox" class="story-character-toggle-checkbox" checked />
+      <span class="story-character-name"></span>
+      <div class="story-note-actions">
+        <span
+          class="fa-solid fa-book-atlas story-character-lorebook-btn"
+          title="В лорбук"
+        ></span>
+        <span class="fa-solid fa-trash story-character-delete-btn"></span>
+        <span
+          class="fa-solid fa-circle-chevron-down story-character-toggle-expand"
+        ></span>
+      </div>
+    </div>
+    <div class="story-character-description"></div>
+  </div>
+</template>
+
+<template id="story-manager-location-item-template">
+  <div class="story-note-item story-manager-location-item">
+    <div class="story-note-header">
+      <input type="checkbox" class="story-location-toggle-checkbox" checked />
+      <span class="story-location-name"></span>
+      <div class="story-note-actions">
+        <span
+          class="fa-solid fa-book-atlas story-location-lorebook-btn"
+          title="В лорбук"
+        ></span>
+        <span class="fa-solid fa-trash story-location-delete-btn"></span>
+        <span
+          class="fa-solid fa-circle-chevron-down story-location-toggle-expand"
+        ></span>
+      </div>
+    </div>
+    <div class="story-location-description"></div>
+  </div>
+</template>
+
+<template id="story-manager-image-preset-card-template">
+  <div class="story-note-item story-image-preset-card" data-preset-id="">
+    <div class="story-note-header">
+      <label class="story-manager-toggle-switch" title="Включён / выключен">
+        <input type="checkbox" class="story-image-preset-toggle story-manager-toggle-switch-input" checked />
+        <span class="story-manager-toggle-slider" aria-hidden="true"></span>
+      </label>
+      <span class="story-image-preset-name" title="Сделать активным для этой ролевой"></span>
+      <div class="story-note-actions">
+        <span class="fa-solid fa-pen story-image-preset-edit-btn" title="Редактировать"></span>
+        <span class="fa-solid fa-file-export story-image-preset-export-btn" title="Экспорт JSON"></span>
+        <span class="fa-solid fa-trash story-image-preset-delete-btn" title="Удалить"></span>
+      </div>
+    </div>
+  </div>
+</template>
