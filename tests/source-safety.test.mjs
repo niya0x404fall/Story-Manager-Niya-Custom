@@ -97,12 +97,15 @@ test("выключенная автоматика блокирует запус�
 test("автосаммари проверяется после любого сообщения без привязки к автору", async () => {
   const events = await read("events/summary-events.js");
   const auto = await read("app/summary-auto.js");
+  const uiText = await read("modules/ui-text.js");
 
   assert.match(events, /eventTypes\.USER_MESSAGE_RENDERED/);
   assert.match(events, /eventTypes\.CHARACTER_MESSAGE_RENDERED/);
   assert.match(events, /maybeGenerateSummary\(messageId\)/);
   assert.match(auto, /getNextAutomaticSummaryPlan/);
   assert.match(auto, /selectedMessages/);
+  assert.match(uiText, /сообщения от вас или бота/);
+  assert.doesNotMatch(uiText, /запускается с вашим следующим сообщением/);
 });
 
 test("панель повторно читает настройки после EXTENSION_SETTINGS_LOADED", async () => {
