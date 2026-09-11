@@ -11,7 +11,7 @@ const { chromium } = require(require.resolve("playwright", {
   paths: [process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES || process.cwd()],
 }));
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const prefix = "/public/scripts/extensions/third-party/Story-Manager/";
+const prefix = "/public/scripts/extensions/third-party/Story-Manager-Niya-Custom/";
 const jquery = await readFile(path.join(process.env.ST_REFERENCE_ROOT, "public/lib/jquery-3.5.1.min.js"), "utf8");
 const output = process.env.ST_UI_TEST_OUTPUT;
 const browser = await chromium.launch({ headless: true });
