@@ -179,6 +179,21 @@ test("предупреждение перед ручным островом на
   );
 });
 
+test("ручной генератор не отправляет запрос через непокрытую историю без явного разрешения", async () => {
+  const h = await setup(13);
+  markSummaryTrackingStarted(h, 12);
+
+  await h.generator.generateSummaryChunkForRange({ start: 0, end: 9 });
+  h.context.chat[11].is_system = true;
+  const actions = await h.load("modules/summary-actions.js");
+
+  await assert.rejects(
+    () => actions.runManualSummaryRange(12, 12),
+    /непокрытые видимые сообщения 10–10/,
+  );
+  assert.equal(h.calls.length, 1);
+});
+
 test("hide или unhide в полёте меняет автоматический план до commit", async () => {
   const h = await setup(4, { summaryInterval: 2 });
   markSummaryTrackingStarted(h);

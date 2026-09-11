@@ -8,7 +8,7 @@ import {
   parseStoryManagerBackup,
 } from "./data-transfer-format.js";
 
-export const STORY_MANAGER_EXTENSION_VERSION = "0.4.8";
+export const STORY_MANAGER_EXTENSION_VERSION = "0.4.9";
 
 export function createCurrentChatBackup() {
   const context = getContext();

@@ -1,6 +1,7 @@
 import { injectAllEntities } from "../injection.js";
 import { getSettings, saveSettings } from "../settings.js";
 import { getContext } from "../../../../../extensions.js";
+import { Popup } from "../../../../../popup.js";
 import {
   formatChunkTitle,
   getVisibleMessagesUntilNext,
@@ -196,18 +197,22 @@ export function initSummaryUI($settingsPanel) {
       parsedStart,
       getContext()?.chat || [],
     );
-    if (
-      precedingGap &&
-      !confirm(fmt.summaryPrecedingGapConfirm(precedingGap.start, precedingGap.end))
-    ) {
-      return;
+    let allowPrecedingGap = false;
+    if (precedingGap) {
+      allowPrecedingGap = await Popup.show.confirm(
+        "Непокрытая история",
+        fmt.summaryPrecedingGapConfirm(precedingGap.start, precedingGap.end),
+      );
+      if (!allowPrecedingGap) {
+        return;
+      }
     }
 
     $btn.prop("disabled", true).text(s.manualInProgress);
     try {
       const { runManualSummaryRange } = await import("../summary-actions.js");
       toastSummaryStart(UI.summary.manualStart);
-      await runManualSummaryRange(start, end);
+      await runManualSummaryRange(start, end, { allowPrecedingGap });
       toastSummarySuccess(UI.summary.manualSuccess);
     } catch (err) {
       toastSummaryError(UI.summary.manualError, err);

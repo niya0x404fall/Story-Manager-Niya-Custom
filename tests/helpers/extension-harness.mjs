@@ -24,14 +24,24 @@ export function createExtensionHarness({ chat = [], chunks = [], settings = {} }
       return state.reply(options);
     } }],
     ["modules/storage.js", { saveChatMetadata: () => { state.saves++; } }],
-    ["modules/lore-cards.js", { normalizeLoreCardEntity: (entity) => entity }],
+    ["modules/lore-cards.js", {
+      normalizeLoreCardEntity: (entity) => entity,
+      getLoreCardBody: (entity) => String(entity?.body || ""),
+    }],
     ["modules/image-defaults.js", { createDefaultImagePreset: () => ({}) }],
   ]);
   const external = {
     "extensions.js": { getContext: () => state.context, extension_settings: state.extensionSettings },
-    "script.js": { saveSettingsDebounced: () => {} },
+    "script.js": {
+      saveSettingsDebounced: () => {},
+      setExtensionPrompt: () => {},
+      extension_prompt_roles: { SYSTEM: 0, USER: 1, ASSISTANT: 2 },
+      extension_prompt_types: { IN_PROMPT: 0, IN_CHAT: 1 },
+    },
     "reasoning.js": { removeReasoningFromString: (value) => value },
     "utils.js": { createTimeout: () => new Promise(() => {}) },
+    "popup.js": { Popup: { show: { confirm: async () => false } } },
+    "tokenizers.js": { getTokenCountAsync: async (value) => String(value || "").length },
   };
   const cache = new Map();
   function moduleAt(url) {

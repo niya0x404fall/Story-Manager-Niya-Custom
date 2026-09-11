@@ -115,6 +115,7 @@ try {
   assert.equal(await page.locator(".story-summary-source-legacy").isVisible(), true);
   await page.locator(".story-summary-source-cancel").click();
   assert.equal(await page.evaluate(() => window.calls.length), 1);
+
   assert.deepEqual(errors, []);
   console.log("UI PASS: mobile choice, cancel/Escape/backdrop without requests, original source payload, free pencil, legacy choices.");
 } finally {

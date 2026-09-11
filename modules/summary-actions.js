@@ -7,6 +7,7 @@ import { injectAllEntities } from "./injection.js";
 import {
   clearCompressionBackup,
   getPendingVisibleMessageCount,
+  getUncoveredVisibleRangeBefore,
   getSummaryFillGapsPlan,
   getSummaryRebuildPlan,
   resetSummaryAnchorMes,
@@ -209,7 +210,11 @@ export async function runSummaryChunkGeneration(options = {}) {
 }
 
 /** Создать одну карточку по точному пользовательскому диапазону сообщений. */
-export async function runManualSummaryRange(startMes, endMes) {
+export async function runManualSummaryRange(
+  startMes,
+  endMes,
+  { allowPrecedingGap = false } = {},
+) {
   const context = getContext();
   const chatLength = context?.chat?.length || 0;
   const start = Number.parseInt(startMes, 10);
@@ -220,6 +225,13 @@ export async function runManualSummaryRange(startMes, endMes) {
   }
   if (start < 0 || end < start || end >= chatLength) {
     throw new Error(`Допустимый диапазон: 0–${Math.max(0, chatLength - 1)}.`);
+  }
+
+  const precedingGap = getUncoveredVisibleRangeBefore(start, context.chat);
+  if (precedingGap && !allowPrecedingGap) {
+    throw new Error(
+      `Перед диапазоном остались непокрытые видимые сообщения ${precedingGap.start}–${precedingGap.end}. Подтвердите создание ещё раз.`,
+    );
   }
 
   const generationToken = tryStartGeneration({
