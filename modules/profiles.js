@@ -1,11 +1,7 @@
 import { extension_settings } from "../../../../extensions.js";
 import { eventSource, event_types, generateRaw } from "../../../../../script.js";
+import { ConnectionManagerRequestService } from "../../../shared.js";
 import { getSettings } from "./settings.js";
-import {
-  canUseDirectConnectionProfile,
-  generateDirectQuiet,
-  getConnectionProfileById,
-} from "./llm-client.js";
 
 export function getProfileId() {
   return getSettings().connectionProfileId || "";
@@ -25,7 +21,62 @@ export function getAllProfiles() {
  * @returns {object|null}
  */
 export function getProfileById(profileId) {
-  return getConnectionProfileById(profileId);
+  const id = String(profileId || "").trim();
+  if (!id) return null;
+  return getAllProfiles().find((profile) => profile.id === id) || null;
+}
+
+function normalizeMessageRole(role) {
+  const value = String(role || "user").trim().toLowerCase();
+  if (value === "admin" || value === "administrator") return "system";
+  return ["system", "user", "assistant"].includes(value) ? value : "user";
+}
+
+function buildProfileMessages(prompt, systemPrompt, messages) {
+  if (Array.isArray(messages) && messages.length > 0) {
+    return messages
+      .map((message) => ({
+        role: normalizeMessageRole(message?.role),
+        content: String(message?.content ?? "").trim(),
+      }))
+      .filter((message) => message.content);
+  }
+
+  return [
+    ...(systemPrompt?.trim()
+      ? [{ role: "system", content: systemPrompt.trim() }]
+      : []),
+    { role: "user", content: String(prompt ?? "").trim() },
+  ].filter((message) => message.content);
+}
+
+async function extractProfileResponse(response) {
+  if (typeof response === "function") {
+    let finalText = "";
+    for await (const chunk of response()) {
+      if (typeof chunk?.text === "string") {
+        finalText = chunk.text;
+      }
+    }
+    if (!finalText.trim()) {
+      throw new Error("Story Manager: модель вернула пустой потоковый ответ.");
+    }
+    return finalText.trim();
+  }
+
+  const text = String(response?.content ?? "").trim();
+  if (!text) {
+    throw new Error("Story Manager: модель вернула пустой ответ.");
+  }
+  return text;
+}
+
+function unwrapRequestError(error) {
+  let current = error;
+  while (current?.cause && typeof current.cause === "object") {
+    current = current.cause;
+  }
+  return current && typeof current.message === "string" ? current : error;
 }
 
 export function getCurrentProfileId() {
@@ -89,7 +140,7 @@ export async function generateQuietWithProfile({
   const effectivePrompt = hasMessages ? messages : prompt;
   const effectiveSystemPrompt = hasMessages ? "" : systemPrompt;
 
-  const runWithLegacySwitch = () =>
+  const runLegacyRequest = () =>
     withProfile(
       () =>
         generateRaw({
@@ -104,7 +155,7 @@ export async function generateQuietWithProfile({
     if (signal?.aborted) {
       throw new DOMException("Generation aborted", "AbortError");
     }
-    return runWithLegacySwitch();
+    return runLegacyRequest();
   }
 
   // Пустой профиль: используем текущие настройки ST.
@@ -120,24 +171,42 @@ export async function generateQuietWithProfile({
   }
 
   const profile = getProfileById(targetProfileId);
-  if (!profile || !canUseDirectConnectionProfile(profile)) {
-    return runWithLegacySwitch();
+  if (!profile) {
+    throw new Error(`Story Manager: профиль подключения не найден (${targetProfileId}).`);
   }
 
+  const profileMessages = buildProfileMessages(prompt, systemPrompt, messages);
+  if (profileMessages.length === 0) {
+    throw new Error("Story Manager: пустой запрос к модели.");
+  }
+
+  // Custom OpenAI-compatible профили получают штатный SSE-парсер ST.
+  // Для остальных источников сохраняем обычный непотоковый ответ.
+  const stream = String(profile.api || "").trim().toLowerCase() === "custom";
+
   try {
-    return await generateDirectQuiet({
-      prompt,
-      systemPrompt,
-      messages: hasMessages ? messages : null,
-      responseLength,
-      profile,
-      signal,
-    });
-  } catch (err) {
-    if (signal?.aborted || err?.name === "AbortError") {
-      throw err;
+    const response = await ConnectionManagerRequestService.sendRequest(
+      targetProfileId,
+      profileMessages,
+      typeof responseLength === "number" && responseLength > 0
+        ? responseLength
+        : 2000,
+      {
+        stream,
+        signal,
+        extractData: true,
+        includePreset: false,
+        includeInstruct: false,
+      },
+      { include_reasoning: false },
+    );
+    return await extractProfileResponse(response);
+  } catch (error) {
+    if (signal?.aborted || error?.name === "AbortError") {
+      throw error;
     }
-    return runWithLegacySwitch();
+    // После отправки запроса не делаем ни fallback, ни вторую попытку.
+    throw unwrapRequestError(error);
   }
 }
 

@@ -7,6 +7,7 @@ import {
   runSummaryChunkGeneration,
 } from "../modules/summary-actions.js";
 import {
+  areAutomaticSummaryPlansEqual,
   getNextAutomaticSummaryPlan,
   hasNewChatMessageSinceBaseline,
   syncSummaryStateWithChat,
@@ -49,7 +50,7 @@ export function stopAutomaticSummaryGeneration() {
   return requestSummaryGenerationStop();
 }
 
-export async function maybeGenerateSummary(triggerMessageId) {
+export async function maybeGenerateSummary(_triggerMessageId) {
   const context = SillyTavern.getContext();
   if (!context?.chatMetadata || !Array.isArray(context.chat)) {
     return;
@@ -73,14 +74,13 @@ export async function maybeGenerateSummary(triggerMessageId) {
   const plan = getNextAutomaticSummaryPlan(
     getSettings().summaryInterval,
     context.chat,
-    triggerMessageId,
   );
   if (!plan) {
     return;
   }
 
-  // Состав фиксируется до первого await: последующее hide не меняет уже
-  // принятую сцену, а правка/свайп/удаление будут замечены перед сохранением.
+  // Состав фиксируется до первого await. Для автоматики видимость временно
+  // является частью решения: hide/unhide до commit требует нового плана.
   const selectedMessages = plan.sourceMessageIds.map((messageId) => ({
     messageId,
     message: context.chat[messageId],
@@ -97,7 +97,17 @@ export async function maybeGenerateSummary(triggerMessageId) {
       selectedMessages,
       // Галочка могла быть выключена, пока провайдер готовил ответ.
       // В этом случае результат нельзя сохранять даже при уже завершившемся запросе.
-      shouldCommit: isAutomaticSummaryEnabled,
+      shouldCommit: () => {
+        if (!isAutomaticSummaryEnabled()) {
+          return false;
+        }
+        const currentContext = SillyTavern.getContext();
+        const currentPlan = getNextAutomaticSummaryPlan(
+          getSettings().summaryInterval,
+          currentContext?.chat || [],
+        );
+        return areAutomaticSummaryPlansEqual(plan, currentPlan);
+      },
       onProgress: progressCallbacks.onProgress,
       onAttemptStart: progressCallbacks.onAttemptStart,
       onAttemptEnd: progressCallbacks.onAttemptEnd,

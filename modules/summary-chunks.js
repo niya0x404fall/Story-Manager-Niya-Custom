@@ -16,6 +16,8 @@ import {
 } from "./summary-integrity.js";
 
 export const SUMMARY_STATE_KEY = "story-manager-summary-state";
+export const DEFAULT_SUMMARY_SAFETY_TAIL = 1;
+const SUMMARY_FRONTIER_VERSION = 1;
 
 export const CHUNK_TYPE = Object.freeze({
   CHUNK: "chunk",
@@ -40,6 +42,8 @@ function getSummaryState() {
       lastKnownChatLength: 0,
       /** Индекс первого неучтённого сообщения. */
       summaryAnchorMes: 0,
+      /** Версия непрерывного frontier автосаммари. */
+      summaryFrontierVersion: SUMMARY_FRONTIER_VERSION,
       /** Чат уже прошёл первичную инициализацию. */
       summaryChatInitialized: false,
     };
@@ -48,6 +52,12 @@ function getSummaryState() {
   const state = context.chatMetadata[SUMMARY_STATE_KEY];
   if (!Number.isInteger(state.summaryAnchorMes)) {
     state.summaryAnchorMes = 0;
+  }
+  // До 0.4.7 якорь фактически вычислялся как max(endMes) + 1. Это могло
+  // перескочить через дыру перед вручную созданной дальней карточкой.
+  if (state.summaryFrontierVersion !== SUMMARY_FRONTIER_VERSION) {
+    state.summaryAnchorMes = 0;
+    state.summaryFrontierVersion = SUMMARY_FRONTIER_VERSION;
   }
   if (typeof state.summaryChatInitialized !== "boolean") {
     state.summaryChatInitialized = Boolean(
@@ -142,6 +152,7 @@ export function ensureSummaryBootstrap(chatLength = getContext()?.chat?.length |
 export function resetSummaryAnchorMes(anchorMes = 0) {
   const state = getSummaryState();
   state.summaryAnchorMes = anchorMes;
+  state.summaryFrontierVersion = SUMMARY_FRONTIER_VERSION;
   saveSummaryState();
 }
 
@@ -194,17 +205,72 @@ function getAnchorChunks() {
   );
 }
 
-/** Индекс первого сообщения, ещё не учтённого карточками. */
-export function getSummaryAnchorMes(chatLength = getContext()?.chat?.length || 0) {
-  const anchorChunks = getAnchorChunks();
-  if (anchorChunks.length > 0) {
-    const anchor = Math.max(...anchorChunks.map((chunk) => chunk.endMes)) + 1;
-    return Math.min(anchor, Math.max(0, chatLength));
+/** Все mesid, уже обработанные пригодными карточками или заглушкой. */
+function getProcessedSummaryMessageIds(chunks = getAnchorChunks()) {
+  const processed = new Set();
+
+  for (const chunk of chunks) {
+    if (!isSummaryPlaceholderChunk(chunk) && hasExactSummarySources(chunk)) {
+      for (const state of chunk.sourceMessageStates) {
+        processed.add(state.messageId);
+      }
+      continue;
+    }
+
+    for (const range of getChunkCoverageRanges(chunk)) {
+      for (let messageId = range.start; messageId <= range.end; messageId += 1) {
+        processed.add(messageId);
+      }
+    }
   }
 
+  return processed;
+}
+
+function calculateContinuousSummaryFrontier(
+  chat = getContext()?.chat || [],
+  storedFrontier = getSummaryState().summaryAnchorMes,
+) {
+  const messages = Array.isArray(chat) ? chat : [];
+  const processed = getProcessedSummaryMessageIds();
+  let cursor = Math.max(0, Math.min(storedFrontier, messages.length));
+
+  while (cursor < messages.length) {
+    const message = messages[cursor];
+    if (!message) {
+      break;
+    }
+    if (message.is_system || processed.has(cursor)) {
+      cursor += 1;
+      continue;
+    }
+    break;
+  }
+
+  return cursor;
+}
+
+/**
+ * После успешного сохранения двигает frontier только через непрерывно
+ * обработанную историю. Дальний ручной «остров» не перескакивает дыру.
+ */
+export function advanceSummaryFrontier(chat = getContext()?.chat || []) {
+  const state = getSummaryState();
+  const next = calculateContinuousSummaryFrontier(chat, state.summaryAnchorMes);
+  if (next !== state.summaryAnchorMes) {
+    state.summaryAnchorMes = next;
+    saveSummaryState();
+  }
+  return next;
+}
+
+/** Индекс первого сообщения, ещё не учтённого карточками. */
+export function getSummaryAnchorMes(chatLength = getContext()?.chat?.length || 0) {
   const state = getSummaryState();
   const stored = Number.isInteger(state.summaryAnchorMes) ? state.summaryAnchorMes : 0;
-  return Math.min(stored, Math.max(0, chatLength));
+  const chat = getContext()?.chat || [];
+  const frontier = calculateContinuousSummaryFrontier(chat, stored);
+  return Math.min(frontier, Math.max(0, chatLength));
 }
 
 export function getNextChunkStart(chatLength = getContext()?.chat?.length || 0) {
@@ -241,10 +307,14 @@ export function getPendingVisibleMessageCount(
       messages.length,
     ),
   );
+  const processed = getProcessedSummaryMessageIds();
   let count = 0;
 
   for (let messageId = start; messageId < endExclusive; messageId += 1) {
-    if (isVisibleSummaryMessage(messages[messageId])) {
+    if (
+      isVisibleSummaryMessage(messages[messageId]) &&
+      !processed.has(messageId)
+    ) {
       count += 1;
     }
   }
@@ -257,7 +327,11 @@ export function getVisibleMessagesUntilNext(
   chat = getContext()?.chat || [],
   beforeMessageId = Array.isArray(chat) ? chat.length : 0,
 ) {
-  return interval - getPendingVisibleMessageCount(chat, beforeMessageId);
+  return Math.max(
+    0,
+    interval + DEFAULT_SUMMARY_SAFETY_TAIL -
+      getPendingVisibleMessageCount(chat, beforeMessageId),
+  );
 }
 
 /**
@@ -306,55 +380,85 @@ export function getNextVisibleChunkRange(
 }
 
 /**
- * План автоматики после нового сообщения пользователя. Текущий ход пользователя
- * не включается. После достижения интервала берём оставшиеся ответы персонажей
- * до следующего видимого пользовательского хода, чтобы не обрывать сцену.
+ * План автоматики не читает автора сообщения. Он берёт ровно `interval`
+ * непокрытых видимых источников, а последние `safetyTail` видимых сообщений
+ * оставляет незакреплёнными. Если раньше встречается готовый ручной «остров»,
+ * незакрытая часть перед ним становится partial-карточкой.
  */
 export function getNextAutomaticSummaryPlan(
   interval,
   chat = getContext()?.chat || [],
-  triggerMessageId,
+  { safetyTail = DEFAULT_SUMMARY_SAFETY_TAIL } = {},
 ) {
   const messages = Array.isArray(chat) ? chat : [];
-  const triggerId = Number.parseInt(triggerMessageId, 10);
-  if (
-    !Number.isInteger(triggerId) ||
-    triggerId < 0 ||
-    triggerId >= messages.length ||
-    !messages[triggerId]?.is_user ||
-    messages[triggerId]?.is_system
-  ) {
+  if (!Number.isInteger(interval) || interval < 1 || messages.length === 0) {
     return null;
   }
 
-  const initial = getNextVisibleChunkRange(interval, messages, {
-    beforeMessageId: triggerId,
-  });
-  if (!initial) {
+  const start = getNextChunkStart(messages.length);
+  if (start >= messages.length) {
     return null;
   }
 
-  let boundary = triggerId;
-  for (let messageId = initial.end + 1; messageId <= triggerId; messageId += 1) {
-    const message = messages[messageId];
-    if (message?.is_user && !message.is_system) {
-      boundary = messageId;
-      break;
+  const safeTailSize = Math.max(0, Number.parseInt(safetyTail, 10) || 0);
+  const visibleIds = [];
+  for (let messageId = 0; messageId < messages.length; messageId += 1) {
+    if (isVisibleSummaryMessage(messages[messageId])) {
+      visibleIds.push(messageId);
     }
   }
+  const protectedIds = new Set(
+    safeTailSize > 0 ? visibleIds.slice(-safeTailSize) : [],
+  );
+  const processed = getProcessedSummaryMessageIds();
 
   const sourceMessageIds = [];
-  for (let messageId = initial.start; messageId < boundary; messageId += 1) {
-    if (isVisibleSummaryMessage(messages[messageId])) {
-      sourceMessageIds.push(messageId);
+  for (let messageId = start; messageId < messages.length; messageId += 1) {
+    const message = messages[messageId];
+    if (!isVisibleSummaryMessage(message)) {
+      continue;
+    }
+
+    if (processed.has(messageId)) {
+      if (sourceMessageIds.length > 0) {
+        return {
+          start,
+          end: messageId - 1,
+          sourceMessageIds,
+        };
+      }
+      continue;
+    }
+
+    if (protectedIds.has(messageId)) {
+      return null;
+    }
+
+    sourceMessageIds.push(messageId);
+    if (sourceMessageIds.length === interval) {
+      return {
+        start,
+        end: messageId,
+        sourceMessageIds,
+      };
     }
   }
 
-  return {
-    start: initial.start,
-    end: boundary - 1,
-    sourceMessageIds,
-  };
+  return null;
+}
+
+export function areAutomaticSummaryPlansEqual(left, right) {
+  if (!left || !right) {
+    return left === right;
+  }
+  return (
+    left.start === right.start &&
+    left.end === right.end &&
+    left.sourceMessageIds.length === right.sourceMessageIds.length &&
+    left.sourceMessageIds.every(
+      (messageId, index) => messageId === right.sourceMessageIds[index],
+    )
+  );
 }
 
 export function shouldAutoGenerateSummary(interval, chatLength) {
@@ -527,6 +631,33 @@ export function getCombinedChunkText(chunks = getSortedSummaryChunks()) {
 /** Валидные карточки, пересекающие пользовательский диапазон. */
 export function getOverlappingSummaryChunks(startMes, endMes) {
   return findSummaryRangeOverlaps(getSortedSummaryChunks(), startMes, endMes);
+}
+
+/** Видимая непокрытая история перед новым ручным диапазоном. */
+export function getUncoveredVisibleRangeBefore(
+  startMes,
+  chat = getContext()?.chat || [],
+) {
+  const messages = Array.isArray(chat) ? chat : [];
+  const boundary = Math.max(
+    0,
+    Math.min(Number.parseInt(startMes, 10) || 0, messages.length),
+  );
+  const processed = getProcessedSummaryMessageIds();
+  let first = null;
+  let last = null;
+
+  for (let messageId = getSummaryAnchorMes(messages.length); messageId < boundary; messageId += 1) {
+    if (
+      isVisibleSummaryMessage(messages[messageId]) &&
+      !processed.has(messageId)
+    ) {
+      if (first === null) first = messageId;
+      last = messageId;
+    }
+  }
+
+  return first === null ? null : { start: first, end: last };
 }
 
 /** Зафиксировать текущие отпечатки сообщений, относящихся к карточке. */

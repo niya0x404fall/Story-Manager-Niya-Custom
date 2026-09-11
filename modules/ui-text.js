@@ -445,6 +445,13 @@ export const fmt = Object.freeze({
       "Всё равно создать новую карточку?"
     );
   },
+  summaryPrecedingGapConfirm(start, end) {
+    return (
+      `Перед выбранным диапазоном остались непокрытые видимые сообщения ${start}–${end}. ` +
+      "Карточка будет создана без их саммари-контекста. Автоматика позднее заполнит этот пробел отдельной карточкой.\n\n" +
+      "Всё равно создать карточку сейчас?"
+    );
+  },
   dataImportStats(stats) {
     const legacy = stats.hasLegacySummary ? ", старое саммари: есть" : "";
     return (

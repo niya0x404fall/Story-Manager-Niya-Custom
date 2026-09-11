@@ -86,19 +86,20 @@ test("выключенная автоматика блокирует запус�
   const generator = await read("modules/generators/summary.js");
 
   assert.match(auto, /if \(!isAutomaticSummaryEnabled\(\)\)/);
-  assert.match(auto, /shouldCommit: isAutomaticSummaryEnabled/);
+  assert.match(auto, /shouldCommit: \(\) =>/);
+  assert.match(auto, /areAutomaticSummaryPlansEqual\(plan, currentPlan\)/);
   assert.match(auto, /stopAutomaticSummaryGeneration/);
   assert.match(auto, /toggles\.every\(\(toggle\) => toggle\.checked\)/);
   assert.match(actions, /shouldCommit/);
   assert.match(generator, /typeof shouldCommit === "function" && !shouldCommit\(\)/);
 });
 
-test("автосаммари запускается только следующим сообщением пользователя", async () => {
+test("автосаммари проверяется после любого сообщения без привязки к автору", async () => {
   const events = await read("events/summary-events.js");
   const auto = await read("app/summary-auto.js");
 
   assert.match(events, /eventTypes\.USER_MESSAGE_RENDERED/);
-  assert.doesNotMatch(events, /eventTypes\.CHARACTER_MESSAGE_RENDERED/);
+  assert.match(events, /eventTypes\.CHARACTER_MESSAGE_RENDERED/);
   assert.match(events, /maybeGenerateSummary\(messageId\)/);
   assert.match(auto, /getNextAutomaticSummaryPlan/);
   assert.match(auto, /selectedMessages/);

@@ -6,6 +6,7 @@ import {
   getVisibleMessagesUntilNext,
   getOverlappingSummaryChunks,
   getPendingVisibleMessageCount,
+  getUncoveredVisibleRangeBefore,
 } from "../summary-chunks.js";
 import { fmt, UI } from "../ui-text.js";
 import { renderSummary } from "./summary-list.js";
@@ -189,6 +190,17 @@ export function initSummaryUI($settingsPanel) {
       if (!confirm(fmt.summaryRangeOverlapConfirm(overlapLabels))) {
         return;
       }
+    }
+
+    const precedingGap = getUncoveredVisibleRangeBefore(
+      parsedStart,
+      getContext()?.chat || [],
+    );
+    if (
+      precedingGap &&
+      !confirm(fmt.summaryPrecedingGapConfirm(precedingGap.start, precedingGap.end))
+    ) {
+      return;
     }
 
     $btn.prop("disabled", true).text(s.manualInProgress);

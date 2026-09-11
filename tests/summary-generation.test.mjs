@@ -19,18 +19,18 @@ function markSummaryTrackingStarted(h, anchor = 0) {
     compressionBackup: null,
     lastKnownChatLength: h.context.chat.length,
     summaryAnchorMes: anchor,
+    summaryFrontierVersion: 1,
     summaryChatInitialized: true,
   };
 }
 
-test("автоматика считает только видимые сообщения до нового хода пользователя", async () => {
+test("автоматика берёт ровно interval видимых сообщений и оставляет safety tail", async () => {
   const h = await setup(5, { summaryInterval: 3 });
   markSummaryTrackingStarted(h);
-  h.context.chat[0].is_user = true;
   h.context.chat[1].is_system = true;
-  h.context.chat[4].is_user = true;
+  h.context.chat[4].is_user = false;
 
-  const plan = h.chunks.getNextAutomaticSummaryPlan(3, h.context.chat, 4);
+  const plan = h.chunks.getNextAutomaticSummaryPlan(3, h.context.chat);
   assert.deepEqual(plain(plan), {
     start: 0,
     end: 3,
@@ -48,6 +48,7 @@ test("автоматика считает только видимые сообщ
 
   assert.equal(h.calls.length, 1);
   assert.doesNotMatch(h.calls[0].prompt, /EVENT_1/);
+  // Последнее видимое сообщение остаётся защитным хвостом независимо от автора.
   assert.doesNotMatch(h.calls[0].prompt, /EVENT_4/);
   assert.deepEqual(
     plain(h.cards()[0].sourceMessageStates.map((state) => state.messageId)),
@@ -55,17 +56,30 @@ test("автоматика считает только видимые сообщ
   );
 });
 
-test("групповые ответы продолжаются до следующего пользовательского хода", async () => {
+test("автоматика не растягивает карточку до следующего пользовательского хода", async () => {
   const h = await setup(5);
   markSummaryTrackingStarted(h);
   h.context.chat[0].is_user = true;
   h.context.chat[4].is_user = true;
 
-  const plan = h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat, 4);
+  const plan = h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat);
   assert.deepEqual(plain(plan), {
     start: 0,
-    end: 3,
-    sourceMessageIds: [0, 1, 2, 3],
+    end: 1,
+    sourceMessageIds: [0, 1],
+  });
+});
+
+test("роль автора не запрещает пользовательскому сообщению завершить карточку", async () => {
+  const h = await setup(4);
+  markSummaryTrackingStarted(h);
+  h.context.chat[1].is_user = true;
+
+  const plan = h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat);
+  assert.deepEqual(plain(plan), {
+    start: 0,
+    end: 1,
+    sourceMessageIds: [0, 1],
   });
 });
 
@@ -76,10 +90,10 @@ test("скрытые сообщения не приближают порог а�
   h.context.chat[1].is_system = true;
   h.context.chat[2].is_system = true;
   h.context.chat[3].is_system = true;
-  h.context.chat[5].is_user = true;
+  h.context.chat[5].is_user = false;
 
-  assert.equal(h.chunks.getPendingVisibleMessageCount(h.context.chat, 5), 2);
-  assert.equal(h.chunks.getNextAutomaticSummaryPlan(3, h.context.chat, 5), null);
+  assert.equal(h.chunks.getPendingVisibleMessageCount(h.context.chat), 3);
+  assert.equal(h.chunks.getNextAutomaticSummaryPlan(3, h.context.chat), null);
   assert.equal(h.calls.length, 0);
 });
 
@@ -87,11 +101,10 @@ test("следующее автосаммари не повторяет уже �
   const h = await setup(7, { summaryInterval: 2 });
   markSummaryTrackingStarted(h);
   h.context.chat[0].is_user = true;
-  h.context.chat[3].is_user = true;
-  h.context.chat[5].is_user = true;
-  h.context.chat[6].is_user = true;
+  h.context.chat[1].is_user = true;
+  h.context.chat[4].is_user = true;
 
-  const first = h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat, 3);
+  const first = h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat);
   const firstSelection = first.sourceMessageIds.map((messageId) => ({
     messageId,
     message: h.context.chat[messageId],
@@ -101,13 +114,73 @@ test("следующее автосаммари не повторяет уже �
     selectedMessages: firstSelection,
   });
 
-  const second = h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat, 5);
+  const second = h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat);
   assert.deepEqual(plain(second), {
-    start: 3,
-    end: 4,
-    sourceMessageIds: [3, 4],
+    start: 2,
+    end: 3,
+    sourceMessageIds: [2, 3],
   });
   assert.equal(second.sourceMessageIds.some((id) => first.sourceMessageIds.includes(id)), false);
+});
+
+test("ручной остров не перескакивает дыру: сначала partial, затем продолжение", async () => {
+  const h = await setup(159, { summaryInterval: 20 });
+  markSummaryTrackingStarted(h, 120);
+
+  await h.generator.generateSummaryChunkForRange({ start: 130, end: 137 });
+
+  const gapPlan = h.chunks.getNextAutomaticSummaryPlan(20, h.context.chat);
+  assert.deepEqual(plain(gapPlan), {
+    start: 120,
+    end: 129,
+    sourceMessageIds: Array.from({ length: 10 }, (_, index) => 120 + index),
+  });
+
+  await h.generator.generateSummaryChunk({
+    range: { start: gapPlan.start, end: gapPlan.end },
+    selectedMessages: gapPlan.sourceMessageIds.map((messageId) => ({
+      messageId,
+      message: h.context.chat[messageId],
+    })),
+  });
+
+  const nextPlan = h.chunks.getNextAutomaticSummaryPlan(20, h.context.chat);
+  assert.deepEqual(plain(nextPlan), {
+    start: 138,
+    end: 157,
+    sourceMessageIds: Array.from({ length: 20 }, (_, index) => 138 + index),
+  });
+});
+
+test("ручной диапазон после дыры получает точное предупреждение", async () => {
+  const h = await setup(140);
+  markSummaryTrackingStarted(h, 120);
+  assert.deepEqual(
+    plain(h.chunks.getUncoveredVisibleRangeBefore(130, h.context.chat)),
+    { start: 120, end: 129 },
+  );
+
+  await h.generator.generateSummaryChunkForRange({ start: 120, end: 129 });
+  assert.equal(h.chunks.getUncoveredVisibleRangeBefore(130, h.context.chat), null);
+});
+
+test("hide или unhide в полёте меняет автоматический план до commit", async () => {
+  const h = await setup(4, { summaryInterval: 2 });
+  markSummaryTrackingStarted(h);
+
+  const beforeHide = h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat);
+  h.context.chat[0].is_system = true;
+  const afterHide = h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat);
+  assert.equal(h.chunks.areAutomaticSummaryPlansEqual(beforeHide, afterHide), false);
+
+  h.context.chat[0].is_system = false;
+  assert.equal(
+    h.chunks.areAutomaticSummaryPlansEqual(
+      beforeHide,
+      h.chunks.getNextAutomaticSummaryPlan(2, h.context.chat),
+    ),
+    true,
+  );
 });
 
 test("создание исключает скрытую ветку, хранит ровно отправленные mesid", async () => {

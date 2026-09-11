@@ -15,6 +15,7 @@ import {
 } from "../entities.js";
 import {
   CHUNK_TYPE,
+  advanceSummaryFrontier,
   formatChunkTitle,
   getCompressionBackupChunks,
   isSummaryPlaceholderChunk,
@@ -219,6 +220,7 @@ export async function generateSummaryChunkForRange(range, options = {}) {
       ...sourceSelection,
     });
   }
+  advanceSummaryFrontier(getContext().chat);
   return result;
 }
 

@@ -10,8 +10,8 @@ export const SUMMARY_GENERATION_TIMEOUT_MS = GENERATION_TIMEOUT_MS;
 /** Единый текст ошибки для всех генераций Story Manager при долгом ответе модели. */
 export const GENERATION_TIMEOUT_ERROR_MESSAGE = UI.timeout.generation;
 
-/** Сколько раз повторять запрос к модели для одного куска. */
-export const SUMMARY_CHUNK_MAX_RETRIES = 3;
+/** Одно действие пользователя — максимум один потенциально платный запрос. */
+export const SUMMARY_CHUNK_MAX_RETRIES = 1;
 
 /**
  * Ограничивает время ожидания промиса, не затрагивая обычную генерацию SillyTavern.
