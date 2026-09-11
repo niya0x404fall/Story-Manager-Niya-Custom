@@ -155,6 +155,8 @@ test("ручной остров не перескакивает дыру: сна
 test("ручной диапазон после дыры получает точное предупреждение", async () => {
   const h = await setup(140);
   markSummaryTrackingStarted(h, 120);
+  await h.generator.generateSummaryChunkForRange({ start: 0, end: 119 });
+
   assert.deepEqual(
     plain(h.chunks.getUncoveredVisibleRangeBefore(130, h.context.chat)),
     { start: 120, end: 129 },
@@ -162,6 +164,19 @@ test("ручной диапазон после дыры получает точ�
 
   await h.generator.generateSummaryChunkForRange({ start: 120, end: 129 });
   assert.equal(h.chunks.getUncoveredVisibleRangeBefore(130, h.context.chat), null);
+});
+
+test("предупреждение перед ручным островом находит дыру даже за временно ушедшим frontier", async () => {
+  const h = await setup(13);
+  markSummaryTrackingStarted(h, 12);
+
+  await h.generator.generateSummaryChunkForRange({ start: 0, end: 9 });
+  h.context.chat[11].is_system = true;
+
+  assert.deepEqual(
+    plain(h.chunks.getUncoveredVisibleRangeBefore(12, h.context.chat)),
+    { start: 10, end: 10 },
+  );
 });
 
 test("hide или unhide в полёте меняет автоматический план до commit", async () => {

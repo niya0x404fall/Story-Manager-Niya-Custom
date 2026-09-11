@@ -633,7 +633,14 @@ export function getOverlappingSummaryChunks(startMes, endMes) {
   return findSummaryRangeOverlaps(getSortedSummaryChunks(), startMes, endMes);
 }
 
-/** Видимая непокрытая история перед новым ручным диапазоном. */
+/**
+ * Видимая непокрытая история перед новым ручным диапазоном.
+ *
+ * Здесь нельзя начинать со summaryAnchorMes: frontier обслуживает автоматику и
+ * в переходном состоянии может уже находиться правее реальной дыры (например,
+ * после hide во время запроса). Для предупреждения важен любой видимый mesid,
+ * который ещё не покрыт карточкой или заглушкой.
+ */
 export function getUncoveredVisibleRangeBefore(
   startMes,
   chat = getContext()?.chat || [],
@@ -647,7 +654,7 @@ export function getUncoveredVisibleRangeBefore(
   let first = null;
   let last = null;
 
-  for (let messageId = getSummaryAnchorMes(messages.length); messageId < boundary; messageId += 1) {
+  for (let messageId = 0; messageId < boundary; messageId += 1) {
     if (
       isVisibleSummaryMessage(messages[messageId]) &&
       !processed.has(messageId)
