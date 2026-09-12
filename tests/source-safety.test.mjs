@@ -118,6 +118,20 @@ test("панель повторно читает настройки после E
   assert.match(settingsUi, /#story_summary_auto_enabled/);
 });
 
+test("новый интервал сохраняется до возможного запуска саммари", async () => {
+  const settingsUi = await read("modules/ui/summary-settings.js");
+  const handlerStart = settingsUi.indexOf("async function handleSummaryIntervalChange");
+  const handlerEnd = settingsUi.indexOf("\nexport function initSummaryUI", handlerStart);
+  const handler = settingsUi.slice(handlerStart, handlerEnd);
+  const saveNewInterval = handler.indexOf("settings.summaryInterval = newInterval;");
+  const firstAwait = handler.indexOf("await ");
+
+  assert.ok(saveNewInterval >= 0);
+  assert.ok(firstAwait >= 0);
+  assert.ok(saveNewInterval < firstAwait);
+  assert.match(handler, /settings\.summaryInterval = previousInterval;[\s\S]*?saveSettings\(\);/);
+});
+
 test("мобильные иконки имеют отдельную сенсорную площадку, а красный статус объяснён", async () => {
   const css = await read("style.css");
   const template = await read("templates/settings.html");

@@ -6,8 +6,9 @@ import { renderSummary } from "./ui/summary.js";
 import { injectAllEntities } from "./injection.js";
 import {
   clearCompressionBackup,
+  formatCompactSummaryRanges,
   getPendingVisibleMessageCount,
-  getUncoveredVisibleRangeBefore,
+  getUncoveredVisibleRangesBefore,
   getSummaryFillGapsPlan,
   getSummaryRebuildPlan,
   resetSummaryAnchorMes,
@@ -227,10 +228,10 @@ export async function runManualSummaryRange(
     throw new Error(`Допустимый диапазон: 0–${Math.max(0, chatLength - 1)}.`);
   }
 
-  const precedingGap = getUncoveredVisibleRangeBefore(start, context.chat);
-  if (precedingGap && !allowPrecedingGap) {
+  const precedingGaps = getUncoveredVisibleRangesBefore(start, context.chat);
+  if (precedingGaps.length > 0 && !allowPrecedingGap) {
     throw new Error(
-      `Перед диапазоном остались непокрытые видимые сообщения ${precedingGap.start}–${precedingGap.end}. Подтвердите создание ещё раз.`,
+      `Перед диапазоном остались непокрытые видимые сообщения ${formatCompactSummaryRanges(precedingGaps)}. Подтвердите создание ещё раз.`,
     );
   }
 

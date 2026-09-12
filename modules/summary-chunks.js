@@ -645,26 +645,63 @@ export function getUncoveredVisibleRangeBefore(
   startMes,
   chat = getContext()?.chat || [],
 ) {
+  const ranges = getUncoveredVisibleRangesBefore(startMes, chat);
+  if (ranges.length === 0) {
+    return null;
+  }
+
+  return {
+    start: ranges[0].start,
+    end: ranges[ranges.length - 1].end,
+  };
+}
+
+/**
+ * Все отдельные участки видимой непокрытой истории перед ручным диапазоном.
+ * Скрытые сообщения внутри участка не разрывают его, а уже покрытая валидной
+ * карточкой история всегда завершает текущий участок.
+ */
+export function getUncoveredVisibleRangesBefore(
+  startMes,
+  chat = getContext()?.chat || [],
+) {
   const messages = Array.isArray(chat) ? chat : [];
   const boundary = Math.max(
     0,
     Math.min(Number.parseInt(startMes, 10) || 0, messages.length),
   );
   const processed = getProcessedSummaryMessageIds();
-  let first = null;
-  let last = null;
+  const ranges = [];
+  let current = null;
 
   for (let messageId = 0; messageId < boundary; messageId += 1) {
-    if (
-      isVisibleSummaryMessage(messages[messageId]) &&
-      !processed.has(messageId)
-    ) {
-      if (first === null) first = messageId;
-      last = messageId;
+    if (processed.has(messageId)) {
+      if (current) {
+        ranges.push(current);
+        current = null;
+      }
+      continue;
+    }
+
+    if (isVisibleSummaryMessage(messages[messageId])) {
+      if (!current) current = { start: messageId, end: messageId };
+      current.end = messageId;
     }
   }
 
-  return first === null ? null : { start: first, end: last };
+  if (current) ranges.push(current);
+  return ranges;
+}
+
+/** Компактный список диапазонов для предупреждений и ошибок. */
+export function formatCompactSummaryRanges(ranges) {
+  const labels = (Array.isArray(ranges) ? ranges : []).map(
+    ({ start, end }) => `${start}–${end}`,
+  );
+  if (labels.length < 2) {
+    return labels[0] || "";
+  }
+  return `${labels.slice(0, -1).join(", ")} и ${labels[labels.length - 1]}`;
 }
 
 /** Зафиксировать текущие отпечатки сообщений, относящихся к карточке. */

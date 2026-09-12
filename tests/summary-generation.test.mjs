@@ -179,6 +179,26 @@ test("предупреждение перед ручным островом на
   );
 });
 
+test("предупреждение перечисляет отдельные дыры, не склеивая покрытые карточки между ними", async () => {
+  const h = await setup(512);
+  markSummaryTrackingStarted(h);
+  h.entities.setEntities("summaryChunks", [
+    { id: 1, type: "chunk", startMes: 0, endMes: 102, text: "A", contextValid: true },
+    { id: 2, type: "chunk", startMes: 103, endMes: 129, text: "B", contextValid: false },
+    { id: 3, type: "chunk", startMes: 130, endMes: 332, text: "C", contextValid: true },
+  ]);
+
+  const gaps = h.chunks.getUncoveredVisibleRangesBefore(509, h.context.chat);
+  assert.deepEqual(plain(gaps), [
+    { start: 103, end: 129 },
+    { start: 333, end: 508 },
+  ]);
+  assert.equal(
+    h.chunks.formatCompactSummaryRanges(gaps),
+    "103–129 и 333–508",
+  );
+});
+
 test("ручной генератор не отправляет запрос через непокрытую историю без явного разрешения", async () => {
   const h = await setup(13);
   markSummaryTrackingStarted(h, 12);

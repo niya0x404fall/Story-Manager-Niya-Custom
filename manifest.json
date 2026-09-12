@@ -6,7 +6,7 @@
   "js": "index.js",
   "css": "style.css",
   "author": "LAO",
-  "version": "0.4.9",
+  "version": "0.4.11",
   "homePage": "https://github.com/niya0x404fall/Story-Manager-Niya-Custom",
   "description": "Custom Story Manager with visible-message autosummary, preserved sources, story chronology, portable backup, and selective compression"
 }

@@ -4,10 +4,11 @@ import { getContext } from "../../../../../extensions.js";
 import { Popup } from "../../../../../popup.js";
 import {
   formatChunkTitle,
+  formatCompactSummaryRanges,
   getVisibleMessagesUntilNext,
   getOverlappingSummaryChunks,
   getPendingVisibleMessageCount,
-  getUncoveredVisibleRangeBefore,
+  getUncoveredVisibleRangesBefore,
 } from "../summary-chunks.js";
 import { fmt, UI } from "../ui-text.js";
 import { renderSummary } from "./summary-list.js";
@@ -85,9 +86,16 @@ function getSelectedSummaryChunkIds($settingsPanel) {
 
 async function handleSummaryIntervalChange(newInterval) {
   const settings = getSettings();
+  const previousInterval = settings.summaryInterval;
   const chat = getContext()?.chat || [];
   const untilNext = getVisibleMessagesUntilNext(newInterval, chat);
   const pending = getPendingVisibleMessageCount(chat);
+
+  // Новое значение должно стать рабочим до первого await: иначе запрос,
+  // запущенный из подтверждения или соседнего события, успеет прочитать старый
+  // интервал из настроек (например, 2 вместо только что введённых 30).
+  settings.summaryInterval = newInterval;
+  saveSettings();
 
   if (untilNext <= 0 && pending > 0) {
     const shouldGenerate = confirm(
@@ -101,14 +109,14 @@ async function handleSummaryIntervalChange(newInterval) {
         await runSummaryChunkGeneration({ forcePartial: true });
         toastSummarySuccess(UI.buttons.summary.success);
       } catch (err) {
+        settings.summaryInterval = previousInterval;
+        saveSettings();
         toastSummaryError(UI.buttons.summary.error, err);
         return false;
       }
     }
   }
 
-  settings.summaryInterval = newInterval;
-  saveSettings();
   const { updateSummaryIndicators } = await import("../buttons.js");
   updateSummaryIndicators();
   return true;
@@ -193,15 +201,17 @@ export function initSummaryUI($settingsPanel) {
       }
     }
 
-    const precedingGap = getUncoveredVisibleRangeBefore(
+    const precedingGaps = getUncoveredVisibleRangesBefore(
       parsedStart,
       getContext()?.chat || [],
     );
     let allowPrecedingGap = false;
-    if (precedingGap) {
+    if (precedingGaps.length > 0) {
       allowPrecedingGap = await Popup.show.confirm(
         "Непокрытая история",
-        fmt.summaryPrecedingGapConfirm(precedingGap.start, precedingGap.end),
+        fmt.summaryPrecedingGapConfirm(
+          formatCompactSummaryRanges(precedingGaps),
+        ),
       );
       if (!allowPrecedingGap) {
         return;
