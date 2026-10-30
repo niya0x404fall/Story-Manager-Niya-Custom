@@ -46,7 +46,7 @@ export function summaryChunkCoversMessage(chunk, messageId) {
     return false;
   }
 
-  if (hasExactSummarySources(chunk)) {
+  if (hasBoundSummarySources(chunk)) {
     return chunk.sourceMessageStates.some((state) => state.messageId === messageId);
   }
   return getChunkCoverageRanges(chunk).some(
@@ -58,10 +58,22 @@ export function summaryChunkCoversMessage(chunk, messageId) {
 export function hasExactSummarySources(chunk) {
   return chunk?.sourceSelectionVersion === 1 &&
     Array.isArray(chunk.sourceMessageStates) &&
+    chunk.sourceMessageStates.length > 0 &&
     chunk.sourceMessageStates.every((state) =>
       Number.isInteger(state?.messageId) && state.messageId >= 0 &&
       typeof state.fingerprint === "string" && state.fingerprint.length > 0,
     );
+}
+
+/** Версия 2 — пользователь вручную связал готовый текст с видимыми сообщениями. */
+export function hasBoundSummarySources(chunk) {
+  return hasExactSummarySources(chunk) ||
+    (chunk?.sourceSelectionVersion === 2 &&
+      Array.isArray(chunk.sourceMessageStates) &&
+      chunk.sourceMessageStates.length > 0 &&
+      chunk.sourceMessageStates.every((state) =>
+        Number.isInteger(state?.messageId) && state.messageId >= 0 &&
+        typeof state.fingerprint === "string" && state.fingerprint.length > 0));
 }
 
 export function rangesOverlap(leftStart, leftEnd, rightStart, rightEnd) {
@@ -410,7 +422,7 @@ export function reindexSummaryChunkAfterDeletions(chunk, deletedMessageIds) {
   }
 
   // Удаление исключённой ветки меняет границы, но не содержание саммари.
-  const touched = hasExactSummarySources(chunk) ? sourceStateTouched : rangeTouched;
+  const touched = hasBoundSummarySources(chunk) ? sourceStateTouched : rangeTouched;
   if (touched && chunk?.type !== PLACEHOLDER_TYPE) {
     next.contextValid = false;
   }

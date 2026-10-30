@@ -6,7 +6,7 @@ import {
   captureSummarySourceMessageStates,
   findSummaryRangeOverlaps,
   getChunkCoverageRanges,
-  hasExactSummarySources,
+  hasBoundSummarySources,
   getSummaryPlaceholderEndAfterResize,
   isSummaryChunkContextUsable,
   isSummarySourceStateCurrent,
@@ -210,7 +210,7 @@ function getProcessedSummaryMessageIds(chunks = getAnchorChunks()) {
   const processed = new Set();
 
   for (const chunk of chunks) {
-    if (!isSummaryPlaceholderChunk(chunk) && hasExactSummarySources(chunk)) {
+    if (!isSummaryPlaceholderChunk(chunk) && hasBoundSummarySources(chunk)) {
       for (const state of chunk.sourceMessageStates) {
         processed.add(state.messageId);
       }
@@ -476,7 +476,7 @@ function getMergedCoverageRanges(chunks = getSortedSummaryChunks()) {
         Number.isInteger(chunk.endMes) &&
         chunk.startMes <= chunk.endMes,
     )
-    .flatMap((chunk) => hasExactSummarySources(chunk)
+    .flatMap((chunk) => hasBoundSummarySources(chunk)
       ? chunk.sourceMessageStates.map((state) => ({ start: state.messageId, end: state.messageId }))
       : getChunkCoverageRanges(chunk))
     .sort((a, b) => a.start - b.start);
@@ -891,7 +891,7 @@ export function syncSummaryStateWithChat(
     if (chunk.endMes >= chatLength) {
       chunk.endMes = chatLength - 1;
       // У точной карточки могли удалить только исключённый хвост диапазона.
-      if (!hasExactSummarySources(chunk) || sourceStateCurrent !== true) {
+      if (!hasBoundSummarySources(chunk) || sourceStateCurrent !== true) {
         chunk.contextValid = false;
       }
       if (Array.isArray(chunk.sourceRanges)) {

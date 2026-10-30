@@ -4,6 +4,7 @@ import {
   getChunkCoverageRanges,
   getSummaryMessageFingerprint,
   getSummaryMessageIdentity,
+  hasBoundSummarySources,
   hasExactSummarySources,
 } from "./summary-integrity.js";
 
@@ -27,7 +28,7 @@ function entriesInRanges(chat, ranges) {
 export function selectSummarySources(chat, chunk, mode) {
   if (!Array.isArray(chat)) throw new Error("Сначала откройте чат.");
   if (mode === SUMMARY_SOURCE_MODE.ORIGINAL) {
-    if (!hasExactSummarySources(chunk)) {
+    if (!hasBoundSummarySources(chunk)) {
       throw new Error("Старый состав источников не сохранён. Выберите весь диапазон или только видимые сообщения.");
     }
     return chunk.sourceMessageStates.map((state) => {
@@ -58,6 +59,13 @@ export function captureSelectedSummarySources(entries) {
   };
 }
 
+/** Ручная привязка готового текста — не утверждение о составе старого AI-запроса. */
+export function captureManuallyBoundSummarySources(chat, chunk) {
+  const entries = selectSummarySources(chat, chunk, SUMMARY_SOURCE_MODE.VISIBLE);
+  if (!entries.length) throw new Error("В диапазоне нет видимых сообщений для привязки.");
+  return { ...captureSelectedSummarySources(entries), sourceSelectionVersion: 2 };
+}
+
 export function formatSelectedSummaryMessages(entries) {
   return entries.map(({ messageId, message }) =>
     `[${messageId}] ${message.name}: ${message.mes}`,
@@ -78,11 +86,11 @@ export function assertSummarySourcesUnchanged(chat, entries, selection) {
 
 /** Карандаш меняет текст, но не включает ранее исключённые сообщения. */
 export function captureEditedSummarySources(chat, chunk) {
-  if (hasExactSummarySources(chunk)) {
+  if (hasBoundSummarySources(chunk)) {
     const entries = chunk.sourceMessageStates
       .filter((state) => chat[state.messageId])
       .map((state) => ({ messageId: state.messageId, message: chat[state.messageId] }));
-    return captureSelectedSummarySources(entries);
+    return { ...captureSelectedSummarySources(entries), sourceSelectionVersion: chunk.sourceSelectionVersion };
   }
   // Даже сохранение карандашом не превращает неизвестное происхождение в точное.
   return {
@@ -105,14 +113,16 @@ export function combineSummarySources(chat, chunks) {
 }
 
 export function getSummarySourceChoices(chat, chunk) {
-  const exact = hasExactSummarySources(chunk);
+  const exact = hasBoundSummarySources(chunk);
   const choices = [];
   if (exact) {
     const available = chunk.sourceMessageStates.filter((state) => chat[state.messageId]);
     choices.push({
       mode: SUMMARY_SOURCE_MODE.ORIGINAL,
-      label: "По сохранённым исходникам",
-      description: "Тот же набор, что при последнем создании карточки, включая скрытое позже. Текст сообщений берётся текущий.",
+      label: chunk.sourceSelectionVersion === 2 ? "По вручную привязанным сообщениям" : "По сохранённым исходникам",
+      description: chunk.sourceSelectionVersion === 2
+        ? "Сообщения, которые вы вручную связали с готовым текстом. Содержание саммари не проверялось."
+        : "Тот же набор, что при последнем создании карточки, включая скрытое позже. Текст сообщений берётся текущий.",
       count: available.length,
       hiddenCount: available.filter((state) => chat[state.messageId]?.is_system).length,
     });
@@ -139,7 +149,7 @@ export function getSummarySourceChoices(chat, chunk) {
 }
 
 export function getVisibleExcludedSummarySourceIds(chat, chunk) {
-  if (!hasExactSummarySources(chunk)) return [];
+  if (!hasBoundSummarySources(chunk)) return [];
   const included = new Set(chunk.sourceMessageStates.map((state) => state.messageId));
   return selectSummarySources(chat, chunk, SUMMARY_SOURCE_MODE.VISIBLE)
     .filter((entry) => !included.has(entry.messageId)).map((entry) => entry.messageId);
