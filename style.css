@@ -145,12 +145,19 @@
 
 .story-summary-source-hint {
   margin: 8px;
-  padding: 10px;
-  border: 1px solid #d6ae4b;
-  border-radius: 6px;
-  background: rgba(214, 174, 75, 0.10);
-  font-size: 0.9em;
+  font-size: 0.82em;
   line-height: 1.4;
+  opacity: 0.85;
+}
+
+.story-summary-bind-sources-btn {
+  color: var(--SmartThemeBodyColor);
+  text-decoration: underline;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
 }
 
 .story-summary-source-choice.menu_button {
