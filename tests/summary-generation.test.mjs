@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createExtensionHarness, messages, plain, deferred } from "./helpers/extension-harness.mjs";
-import { captureSelectedSummarySources, selectSummarySources, captureEditedSummarySources, getSummarySourceChoices, getVisibleExcludedSummarySourceIds } from "../modules/summary-sources.js";
-import { hasExactSummarySources, isSummarySourceStateCurrent } from "../modules/summary-integrity.js";
+import { captureSelectedSummarySources, captureManuallyBoundSummarySources, selectSummarySources, captureEditedSummarySources, getSummarySourceChoices, getVisibleExcludedSummarySourceIds } from "../modules/summary-sources.js";
+import { hasBoundSummarySources, hasExactSummarySources, isSummarySourceStateCurrent, summaryChunkCoversMessage } from "../modules/summary-integrity.js";
 import { DEFAULT_SUMMARY_PROMPT, migrateSummaryPrompt } from "../modules/summary-prompts.js";
 
 async function setup(count = 5, settings = {}) {
@@ -23,6 +23,38 @@ function markSummaryTrackingStarted(h, anchor = 0) {
     summaryChatInitialized: true,
   };
 }
+
+test("пустые исходники из внешнего саммари не считаются точным пустым запросом", async () => {
+  const h = await setup(5);
+  const card = { id: 10, type: "chunk", startMes: 0, endMes: 3,
+    text: "Готовое саммари", enabled: true, contextValid: true,
+    sourceSelectionVersion: 1, sourceMessageStates: [] };
+  h.context.chatMetadata["story-manager-summary-chunks"] = [card];
+  assert.equal(hasExactSummarySources(card), false);
+  assert.equal(summaryChunkCoversMessage(card, 2), true);
+  assert.deepEqual(plain(getVisibleExcludedSummarySourceIds(h.context.chat, card)), []);
+  assert.deepEqual(plain(h.chunks.getUncoveredSummaryGaps(5)), [{ start: 4, end: 4 }]);
+  assert.equal(h.calls.length, 0);
+});
+
+test("ручная привязка фиксирует только видимые сообщения и не выдаёт себя за AI-запрос", async () => {
+  const h = await setup(5);
+  h.context.chat[1].is_system = true;
+  const card = { id: 10, type: "chunk", startMes: 0, endMes: 3,
+    text: "Готовое саммари", enabled: true, contextValid: true,
+    sourceSelectionVersion: 1, sourceMessageStates: [] };
+  h.context.chatMetadata["story-manager-summary-chunks"] = [card];
+  Object.assign(card, captureManuallyBoundSummarySources(h.context.chat, card));
+  assert.equal(hasBoundSummarySources(card), true);
+  assert.equal(hasExactSummarySources(card), false);
+  assert.deepEqual(plain(card.sourceMessageStates.map((state) => state.messageId)), [0, 2, 3]);
+  assert.deepEqual(plain(h.chunks.getUncoveredSummaryGaps(5)), [{ start: 4, end: 4 }]);
+  h.context.chat[1].is_system = false;
+  assert.deepEqual(plain(getVisibleExcludedSummarySourceIds(h.context.chat, card)), [1]);
+  assert.deepEqual(plain(h.chunks.getUncoveredSummaryGaps(5)), [{ start: 1, end: 1 }, { start: 4, end: 4 }]);
+  assert.equal(captureEditedSummarySources(h.context.chat, card).sourceSelectionVersion, 2);
+  assert.equal(h.calls.length, 0);
+});
 
 test("автоматика берёт ровно interval видимых сообщений и оставляет safety tail", async () => {
   const h = await setup(5, { summaryInterval: 3 });
