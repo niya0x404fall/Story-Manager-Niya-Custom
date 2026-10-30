@@ -19,7 +19,8 @@ import {
   getSortedSummaryChunks,
   hasCompressionBackup,
 } from "../summary-chunks.js";
-import { captureEditedSummarySources, getVisibleExcludedSummarySourceIds } from "../summary-sources.js";
+import { captureEditedSummarySources, captureManuallyBoundSummarySources, getVisibleExcludedSummarySourceIds } from "../summary-sources.js";
+import { hasBoundSummarySources } from "../summary-integrity.js";
 import { reconcileSummaryHistory } from "../summary-history.js";
 import { injectAllEntities } from "../injection.js";
 import { GENERATION_TYPE, tryStartGeneration, finishGeneration, isGenerationInProgress, showGenerationBusyToast } from "../generation-state.js";
@@ -82,8 +83,15 @@ function decorateSummaryChunk($item, chunk) {
   const excluded = getVisibleExcludedSummarySourceIds(getContext()?.chat || [], chunk);
   if (!isPlaceholder && !isStale && excluded.length) {
     $("<p class='story-summary-source-hint'></p>")
-      .text(`Видимых сообщений вне исходников этой карточки: ${excluded.length}. Карточка остаётся активной. Чтобы включить их, выберите ↻ → «Только видимые сейчас» или «Заполнить пробелы».`)
+      .text(`${excluded.length} видимых сообщений вне исходников. Карточка активна. ↻ → «Только видимые сейчас» или «Заполнить пробелы».`)
       .insertAfter($item.find(".story-summary-chunk-header"));
+  } else if (!isPlaceholder && !isStale && !hasBoundSummarySources(chunk)) {
+    const $hint = $("<p class='story-summary-source-hint'></p>");
+    $hint.append(document.createTextNode("Состав исходников не сохранён. "));
+    $("<button type='button' class='story-summary-bind-sources-btn'></button>")
+      .text("Привязать видимые без запроса")
+      .appendTo($hint);
+    $hint.insertAfter($item.find(".story-summary-chunk-header"));
   }
 }
 
@@ -184,6 +192,46 @@ const SUMMARY_CARD_LIST_CONFIG = {
     await updateSummaryTokenCountFromChunks();
   },
   actions: [
+    {
+      selector: ".story-summary-bind-sources-btn",
+      handler: async (_e, { id, reRender }) => {
+        const context = getContext();
+        const metadataRef = context?.chatMetadata;
+        const chunk = getEntities("summaryChunks").find((item) => item.id === id);
+        if (!chunk || hasBoundSummarySources(chunk)) return;
+        const originalText = chunk.text;
+        const originalRanges = JSON.stringify({ start: chunk.startMes, end: chunk.endMes, ranges: chunk.sourceRanges });
+        let before;
+        try {
+          before = captureManuallyBoundSummarySources(context.chat, chunk);
+        } catch (err) {
+          toastSummaryWarning(err.message);
+          return;
+        }
+        if (!window.confirm(
+          `Привязать ${before.sourceMessageStates.length} видимых сообщений к карточке ${chunk.startMes} — ${chunk.endMes}? ` +
+          "Это не проверяет, что текст саммари действительно описывает все эти сообщения. Запросов к модели не будет.",
+        )) return;
+        const current = getEntities("summaryChunks").find((item) => item.id === id);
+        let after;
+        try {
+          after = current && captureManuallyBoundSummarySources(getContext().chat, current);
+        } catch (_err) {
+          // Сообщения могли стать скрытыми во время подтверждения.
+        }
+        if (getContext()?.chatMetadata !== metadataRef || current !== chunk ||
+            hasBoundSummarySources(current) || !after ||
+            current.text !== originalText ||
+            JSON.stringify({ start: current.startMes, end: current.endMes, ranges: current.sourceRanges }) !== originalRanges ||
+            JSON.stringify(after) !== JSON.stringify(before)) {
+          toastSummaryWarning("Чат или сообщения изменились. Откройте карточку заново.");
+          return;
+        }
+        updateEntity("summaryChunks", id, before);
+        await reRender();
+        toastInfo("Видимые сообщения привязаны без запроса к модели.");
+      },
+    },
     {
       selector: ".story-summary-chunk-stale-icon",
       handler: () => toastSummaryWarning(UI.summary.chunkStaleHelp),
