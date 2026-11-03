@@ -215,7 +215,88 @@
               </p>
             </div>
 
-            <h4 class="story-summary-chunks-heading">Карточки саммари:</h4>
+            <details class="story-manager-block story-summary-manual-range">
+              <summary class="menu_button story-summary-manual-range-title">＋ Добавить саммари</summary>
+              <div class="story-summary-manual-range-panel">
+                <div class="story-summary-mode-switch" role="group" aria-label="Способ добавления саммари">
+                  <button
+                    id="story-summary-mode-manual"
+                    type="button"
+                    class="menu_button story-summary-mode-option story-summary-mode-option--active"
+                    data-summary-mode="manual"
+                    aria-pressed="true"
+                  >
+                    ✍️ Вставить готовое
+                  </button>
+                  <button
+                    id="story-summary-mode-generate"
+                    type="button"
+                    class="menu_button story-summary-mode-option"
+                    data-summary-mode="generate"
+                    aria-pressed="false"
+                  >
+                    ✨ Сгенерировать
+                  </button>
+                </div>
+                <div class="story-summary-manual-range-fields">
+                  <label for="story_summary_manual_start">
+                    <span>С сообщения №</span>
+                    <input
+                      type="number"
+                      id="story_summary_manual_start"
+                      class="text_pole story-manager-input-narrow"
+                      min="0"
+                      step="1"
+                      placeholder="120"
+                    />
+                  </label>
+                  <label for="story_summary_manual_end">
+                    <span>По сообщение №</span>
+                    <input
+                      type="number"
+                      id="story_summary_manual_end"
+                      class="text_pole story-manager-input-narrow"
+                      min="0"
+                      step="1"
+                      placeholder="145"
+                    />
+                  </label>
+                </div>
+
+                <div class="story-summary-creation-panel" data-summary-mode-panel="manual">
+                  <label class="story-summary-manual-text-label" for="story_summary_manual_text">
+                    <span>Текст саммари</span>
+                    <textarea
+                      id="story_summary_manual_text"
+                      class="text_pole story-summary-manual-text"
+                      rows="6"
+                      placeholder="Напишите или вставьте готовый пересказ…"
+                    ></textarea>
+                  </label>
+                  <label class="story-manager-inline-toggle story-summary-manual-include-hidden-label" for="story_summary_manual_include_hidden">
+                    <input type="checkbox" id="story_summary_manual_include_hidden" />
+                    <span>Саммари включает скрытые сообщения этого диапазона</span>
+                  </label>
+                  <p class="story-manager-hint story-summary-manual-range-hint">
+                    Сохранение готового текста не вызывает модель и не расходует запросы.
+                  </p>
+                  <button id="story-summary-manual-save-btn" type="button" class="menu_button">
+                    💾 Сохранить карточку
+                  </button>
+                </div>
+
+                <div class="story-summary-creation-panel story-manager-hidden" data-summary-mode-panel="generate">
+                  <p class="story-manager-hint story-summary-generate-hint">
+                    Будет использован один запрос к выбранной модели.
+                  </p>
+                  <button id="story-summary-manual-create-btn" type="button" class="menu_button">
+                    ✨ Сгенерировать саммари
+                  </button>
+                </div>
+              </div>
+            </details>
+
+            <h4 class="story-summary-chunks-heading">Готовые саммари</h4>
             <p class="story-manager-hint story-summary-selection-hint">
               Первая галочка включает карточку в контекст; вторая отмечает её для сокращения.
             </p>
@@ -229,86 +310,55 @@
               0 токенов
             </span>
 
-            <details class="story-manager-block story-summary-manual-range">
-              <summary class="menu_button story-summary-manual-range-title">✨ Создать по диапазону</summary>
-              <div class="story-summary-manual-range-panel">
-                <div class="story-summary-manual-range-fields">
-                  <label for="story_summary_manual_start">
-                    <span>Начало (mesid)</span>
-                    <input
-                      type="number"
-                      id="story_summary_manual_start"
-                      class="text_pole story-manager-input-narrow"
-                      min="0"
-                      step="1"
-                      placeholder="120"
-                    />
-                  </label>
-                  <label for="story_summary_manual_end">
-                    <span>Конец (mesid)</span>
-                    <input
-                      type="number"
-                      id="story_summary_manual_end"
-                      class="text_pole story-manager-input-narrow"
-                      min="0"
-                      step="1"
-                      placeholder="145"
-                    />
-                  </label>
-                  <button id="story-summary-manual-create-btn" type="button" class="menu_button">
-                    ✨ Создать
+            <details class="story-manager-block story-summary-maintenance">
+              <summary class="menu_button story-summary-maintenance-title">⚙️ Дополнительные действия</summary>
+              <div class="story-summary-maintenance-panel">
+                <div class="story-summary-actions">
+                  <button
+                    id="story-summary-compress-btn"
+                    type="button"
+                    class="menu_button"
+                    title="Сократить только отмеченные карточки"
+                  >
+                    🗜️ Сократить саммари
+                  </button>
+                  <button
+                    id="story-summary-rebuild-btn"
+                    type="button"
+                    class="menu_button"
+                    title="Пересоздать все карточки по всей истории чата"
+                  >
+                    📖 Сделать саммари с нуля
                   </button>
                 </div>
-                <p class="story-manager-hint story-summary-manual-range-hint">
-                  Номера совпадают с mesid в SillyTavern; границы включаются в саммари.
-                </p>
+                <div class="story-summary-actions">
+                  <button
+                    id="story-summary-import-builtin-btn"
+                    type="button"
+                    class="menu_button"
+                    title="Импортировать текст из встроенного Summarize"
+                  >
+                    📥 Подтянуть из Саммари
+                  </button>
+                  <button
+                    id="story-summary-fill-gaps-btn"
+                    type="button"
+                    class="menu_button"
+                    title="Создать карточки для всех непокрытых участков истории"
+                  >
+                    🧩 Заполнить пробелы
+                  </button>
+                </div>
+                <button
+                  id="story-summary-rollback-btn"
+                  type="button"
+                  class="menu_button story-summary-rollback-btn story-manager-hidden"
+                  title="Вернуть карточки до последнего сокращения"
+                >
+                  ↩️ Отменить сокращение
+                </button>
               </div>
             </details>
-
-            <div class="story-summary-actions">
-              <button
-                id="story-summary-compress-btn"
-                type="button"
-                class="menu_button"
-                title="Сократить только отмеченные карточки"
-              >
-                🗜️ Сократить саммари
-              </button>
-              <button
-                id="story-summary-rebuild-btn"
-                type="button"
-                class="menu_button"
-                title="Пересоздать все карточки по всей истории чата"
-              >
-                📖 Сделать саммари с нуля
-              </button>
-            </div>
-            <div class="story-summary-actions">
-              <button
-                id="story-summary-import-builtin-btn"
-                type="button"
-                class="menu_button"
-                title="Импортировать текст из встроенного Summarize"
-              >
-                📥 Подтянуть из Саммари
-              </button>
-              <button
-                id="story-summary-fill-gaps-btn"
-                type="button"
-                class="menu_button"
-                title="Создать карточки для всех непокрытых участков истории"
-              >
-                🧩 Заполнить пробелы
-              </button>
-            </div>
-            <button
-              id="story-summary-rollback-btn"
-              type="button"
-              class="menu_button story-summary-rollback-btn story-manager-hidden"
-              title="Вернуть карточки до последнего сокращения"
-            >
-              ↩️ Отменить сокращение
-            </button>
           </div>
         </div>
       </div>
