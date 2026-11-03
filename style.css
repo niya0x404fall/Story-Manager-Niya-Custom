@@ -936,7 +936,8 @@
   margin-bottom: 7px;
 }
 
-.story-summary-manual-range-title {
+.story-summary-manual-range-title,
+.story-summary-maintenance-title {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -948,20 +949,48 @@
   user-select: none;
 }
 
-.story-summary-manual-range-title::-webkit-details-marker {
+.story-summary-manual-range-title::-webkit-details-marker,
+.story-summary-maintenance-title::-webkit-details-marker {
   display: none;
 }
 
-.story-summary-manual-range-title::marker {
+.story-summary-manual-range-title::marker,
+.story-summary-maintenance-title::marker {
   content: "";
 }
 
-.story-summary-manual-range-panel {
+.story-summary-manual-range-panel,
+.story-summary-maintenance-panel {
   margin-top: 8px;
   padding: 10px;
   border: 1px solid var(--SmartThemeBorderColor);
   border-radius: 6px;
   background: var(--black20a);
+}
+
+.story-summary-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 7px;
+  background: var(--black20a);
+}
+
+.story-summary-mode-option {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  white-space: normal;
+  opacity: 0.68;
+}
+
+.story-summary-mode-option.story-summary-mode-option--active {
+  border-color: var(--SmartThemeQuoteColor);
+  background: color-mix(in srgb, var(--SmartThemeQuoteColor) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--SmartThemeQuoteColor) 45%, transparent);
+  opacity: 1;
 }
 
 .story-summary-injection-extra,
@@ -986,9 +1015,48 @@
   flex: 1 1 120px;
 }
 
+.story-summary-manual-text-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.story-summary-manual-text {
+  width: 100%;
+  min-height: 120px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.story-summary-creation-panel {
+  margin-top: 10px;
+}
+
+.story-summary-creation-panel > .menu_button {
+  width: 100%;
+  margin-top: 10px;
+  white-space: normal;
+}
+
+.story-summary-manual-include-hidden-label {
+  align-items: flex-start;
+  margin-top: 10px;
+  white-space: normal;
+}
+
 .story-summary-injection-hint,
-.story-summary-manual-range-hint {
+.story-summary-manual-range-hint,
+.story-summary-generate-hint {
   margin: 8px 0 0;
+}
+
+.story-summary-maintenance {
+  margin-top: 12px;
+}
+
+.story-summary-maintenance-panel .story-summary-actions:first-child {
+  margin-top: 0;
 }
 
 .story-summary-chunk-select-checkbox {
