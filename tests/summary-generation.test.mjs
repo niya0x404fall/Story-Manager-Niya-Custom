@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createExtensionHarness, messages, plain, deferred } from "./helpers/extension-harness.mjs";
-import { captureSelectedSummarySources, captureManuallyBoundSummarySources, selectSummarySources, captureEditedSummarySources, getSummarySourceChoices, getVisibleExcludedSummarySourceIds } from "../modules/summary-sources.js";
+import { SUMMARY_SOURCE_MODE, captureSelectedSummarySources, captureManuallyBoundSummarySources, selectSummarySources, captureEditedSummarySources, getSummarySourceChoices, getVisibleExcludedSummarySourceIds } from "../modules/summary-sources.js";
 import { hasBoundSummarySources, hasExactSummarySources, isSummarySourceStateCurrent, summaryChunkCoversMessage } from "../modules/summary-integrity.js";
 import { DEFAULT_SUMMARY_PROMPT, migrateSummaryPrompt } from "../modules/summary-prompts.js";
 
@@ -53,6 +53,52 @@ test("ручная привязка фиксирует только видимы
   assert.deepEqual(plain(getVisibleExcludedSummarySourceIds(h.context.chat, card)), [1]);
   assert.deepEqual(plain(h.chunks.getUncoveredSummaryGaps(5)), [{ start: 1, end: 1 }, { start: 4, end: 4 }]);
   assert.equal(captureEditedSummarySources(h.context.chat, card).sourceSelectionVersion, 2);
+  assert.equal(h.calls.length, 0);
+});
+
+test("готовый текст сохраняется карточкой по видимым сообщениям без запроса", async () => {
+  const h = await setup(4);
+  markSummaryTrackingStarted(h);
+  h.context.chat[1].is_system = true;
+  const actions = await h.load("modules/summary-actions.js");
+
+  const card = actions.createManualSummaryText(0, 2, "  Написанное вручную саммари.  ");
+
+  assert.equal(card.text, "Написанное вручную саммари.");
+  assert.equal(card.sourceSelectionVersion, 2);
+  assert.deepEqual(plain(card.sourceMessageStates.map((state) => state.messageId)), [0, 2]);
+  assert.equal(card.contextValid, true);
+  assert.equal(h.calls.length, 0);
+});
+
+test("готовый текст можно привязать ко всему скрытому диапазону без запроса", async () => {
+  const h = await setup(4);
+  markSummaryTrackingStarted(h);
+  for (let id = 0; id <= 2; id++) h.context.chat[id].is_system = true;
+  const actions = await h.load("modules/summary-actions.js");
+
+  const card = actions.createManualSummaryText(0, 2, "Саммари скрытой истории.", {
+    sourceMode: SUMMARY_SOURCE_MODE.ALL,
+  });
+
+  assert.deepEqual(plain(card.sourceMessageStates.map((state) => state.messageId)), [0, 1, 2]);
+  assert.equal(card.sourceSelectionVersion, 2);
+  assert.equal(h.calls.length, 0);
+});
+
+test("готовое саммари требует текст и подходящие источники", async () => {
+  const h = await setup(3);
+  markSummaryTrackingStarted(h);
+  const actions = await h.load("modules/summary-actions.js");
+
+  assert.throws(() => actions.createManualSummaryText(0, 1, "   "), /Вставьте или напишите/);
+  h.context.chat[0].is_system = true;
+  h.context.chat[1].is_system = true;
+  assert.throws(
+    () => actions.createManualSummaryText(0, 1, "Есть текст"),
+    /Выберите весь диапазон, включая скрытые/,
+  );
+  assert.equal(h.cards().length, 0);
   assert.equal(h.calls.length, 0);
 });
 

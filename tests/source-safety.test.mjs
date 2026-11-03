@@ -143,6 +143,22 @@ test("мобильные иконки имеют отдельную сенсор
   assert.match(template, /hide\/unhide на неё не влияет/);
 });
 
+test("добавление саммари разделяет готовый текст и генерацию", async () => {
+  const template = await read("templates/settings.html");
+  const settingsUi = await read("modules/ui/summary-settings.js");
+
+  assert.match(template, /data-summary-mode="manual"/);
+  assert.match(template, /data-summary-mode="generate"/);
+  assert.match(template, /data-summary-mode-panel="manual"/);
+  assert.match(template, /data-summary-mode-panel="generate"/);
+  assert.match(template, /story_summary_manual_include_hidden/);
+  assert.match(template, /story-summary-maintenance-title/);
+  assert.doesNotMatch(template, /story_summary_manual_source_mode/);
+  assert.match(settingsUi, /sourceMode[\s\S]*?\? "all"[\s\S]*?: "visible"/);
+  assert.match(settingsUi, /saveManualSummaryText/);
+  assert.match(settingsUi, /runManualSummaryRange/);
+});
+
 test("служебная placeholder-заглушка не показывается как пустая карточка", async () => {
   const summaryList = await read("modules/ui/summary-list.js");
 
