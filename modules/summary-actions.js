@@ -6,6 +6,7 @@ import { renderSummary } from "./ui/summary.js";
 import { injectAllEntities } from "./injection.js";
 import {
   clearCompressionBackup,
+  advanceSummaryFrontier,
   formatCompactSummaryRanges,
   getPendingVisibleMessageCount,
   getUncoveredVisibleRangesBefore,
@@ -39,6 +40,10 @@ import {
   isSummaryStopRequested,
   requestSummaryStop,
 } from "./summary-cancellation.js";
+import {
+  SUMMARY_SOURCE_MODE,
+  captureManuallyBoundSummarySources,
+} from "./summary-sources.js";
 
 export function isSummaryGenerationInProgress() {
   return (
@@ -262,6 +267,73 @@ export async function runManualSummaryRange(
     unlockAllButtons();
     finishGeneration(generationToken);
   }
+}
+
+/**
+ * Сохранить написанный пользователем текст как карточку без обращения к модели.
+ * Функция синхронно фиксирует источники до любых await.
+ */
+export function createManualSummaryText(
+  startMes,
+  endMes,
+  text,
+  {
+    allowPrecedingGap = false,
+    sourceMode = SUMMARY_SOURCE_MODE.VISIBLE,
+  } = {},
+) {
+  const context = getContext();
+  const chatLength = context?.chat?.length || 0;
+  const start = Number.parseInt(startMes, 10);
+  const end = Number.parseInt(endMes, 10);
+  const summaryText = String(text || "").trim();
+
+  if (!Number.isInteger(start) || !Number.isInteger(end)) {
+    throw new Error("Укажите начало и конец диапазона числами.");
+  }
+  if (start < 0 || end < start || end >= chatLength) {
+    throw new Error(`Допустимый диапазон: 0–${Math.max(0, chatLength - 1)}.`);
+  }
+  if (!summaryText) {
+    throw new Error("Вставьте или напишите текст саммари.");
+  }
+  if (isSummaryGenerationInProgress()) {
+    throw new Error(getGenerationBusyMessage());
+  }
+
+  const precedingGaps = getUncoveredVisibleRangesBefore(start, context.chat);
+  if (precedingGaps.length > 0 && !allowPrecedingGap) {
+    throw new Error(
+      `Перед диапазоном остались непокрытые видимые сообщения ${formatCompactSummaryRanges(precedingGaps)}. Подтвердите создание ещё раз.`,
+    );
+  }
+
+  const sourceSelection = captureManuallyBoundSummarySources(
+    context.chat,
+    { startMes: start, endMes: end },
+    sourceMode,
+  );
+  const chunk = createEntity("summaryChunks", {
+    type: CHUNK_TYPE.CHUNK,
+    startMes: start,
+    endMes: end,
+    text: summaryText,
+    contextValid: true,
+    sourceUnavailable: false,
+    ...sourceSelection,
+  });
+  advanceSummaryFrontier(context.chat);
+  return chunk;
+}
+
+/** Сохранить готовый текст и сразу обновить панель/контекст. */
+export async function saveManualSummaryText(...args) {
+  const chunk = createManualSummaryText(...args);
+  await renderSummary();
+  injectAllEntities();
+  const { updateSummaryIndicators } = await import("./buttons.js");
+  updateSummaryIndicators();
+  return chunk;
 }
 
 export function canGenerateSummaryChunk() {

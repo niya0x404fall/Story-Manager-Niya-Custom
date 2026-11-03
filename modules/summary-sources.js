@@ -60,9 +60,22 @@ export function captureSelectedSummarySources(entries) {
 }
 
 /** Ручная привязка готового текста — не утверждение о составе старого AI-запроса. */
-export function captureManuallyBoundSummarySources(chat, chunk) {
-  const entries = selectSummarySources(chat, chunk, SUMMARY_SOURCE_MODE.VISIBLE);
-  if (!entries.length) throw new Error("В диапазоне нет видимых сообщений для привязки.");
+export function captureManuallyBoundSummarySources(
+  chat,
+  chunk,
+  mode = SUMMARY_SOURCE_MODE.VISIBLE,
+) {
+  if (![SUMMARY_SOURCE_MODE.VISIBLE, SUMMARY_SOURCE_MODE.ALL].includes(mode)) {
+    throw new Error("Выберите, какие сообщения относятся к готовому саммари.");
+  }
+  const entries = selectSummarySources(chat, chunk, mode);
+  if (!entries.length) {
+    throw new Error(
+      mode === SUMMARY_SOURCE_MODE.VISIBLE
+        ? "В диапазоне нет видимых сообщений. Выберите весь диапазон, включая скрытые."
+        : "В выбранном диапазоне нет сообщений.",
+    );
+  }
   return { ...captureSelectedSummarySources(entries), sourceSelectionVersion: 2 };
 }
 
