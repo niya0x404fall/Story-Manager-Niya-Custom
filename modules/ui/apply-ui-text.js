@@ -78,10 +78,19 @@ export function applySettingsPanelText($panel) {
   setLabelText($root, "story_manager_summary_interval", s.intervalLabel);
   $summary.find(".story-summary-auto-hint").text(s.autoHint);
   $summary.find(".story-summary-manual-range-title").text(s.manualTitle);
+  $summary.find("#story-summary-mode-manual").text(s.manualMode);
+  $summary.find("#story-summary-mode-generate").text(s.generateMode);
   $summary.find('label[for="story_summary_manual_start"] span').text(s.manualStart);
   $summary.find('label[for="story_summary_manual_end"] span').text(s.manualEnd);
+  $summary.find('label[for="story_summary_manual_text"] span').text(s.manualText);
+  $summary.find("#story_summary_manual_text").attr("placeholder", s.manualTextPlaceholder);
+  $summary
+    .find('label[for="story_summary_manual_include_hidden"] span')
+    .text(s.manualIncludeHidden);
+  $summary.find("#story-summary-manual-save-btn").text(s.manualSave);
   $summary.find("#story-summary-manual-create-btn").text(s.manualCreate);
   $summary.find(".story-summary-manual-range-hint").text(s.manualHint);
+  $summary.find(".story-summary-generate-hint").text(s.generateHint);
   $summary.find(".story-summary-chunks-heading").text(s.chunksHeading);
   $summary.find(".story-summary-selection-hint").text(s.selectionHint);
   $summary.find(".story-summary-stale-hint").text(s.staleHint);
@@ -97,6 +106,7 @@ export function applySettingsPanelText($panel) {
     .attr("title", s.importBuiltinTitle);
   $summary.find("#story-summary-fill-gaps-btn").text(s.fillGaps).attr("title", s.fillGapsTitle);
   $summary.find("#story-summary-rollback-btn").text(s.rollback).attr("title", s.rollbackTitle);
+  $summary.find(".story-summary-maintenance-title").text(s.maintenanceTitle);
 }
 
 export function applyDataImportPopupText($popup) {

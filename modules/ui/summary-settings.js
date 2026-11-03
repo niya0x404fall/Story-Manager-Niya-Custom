@@ -122,6 +122,67 @@ async function handleSummaryIntervalChange(newInterval) {
   return true;
 }
 
+async function confirmSummaryRangeCreation($settingsPanel) {
+  const start = $settingsPanel.find("#story_summary_manual_start").val();
+  const end = $settingsPanel.find("#story_summary_manual_end").val();
+  const parsedStart = Number.parseInt(start, 10);
+  const parsedEnd = Number.parseInt(end, 10);
+  const overlaps = getOverlappingSummaryChunks(parsedStart, parsedEnd);
+
+  if (overlaps.length > 0) {
+    const overlapLabels = overlaps
+      .map((chunk) => formatChunkTitle(chunk.startMes, chunk.endMes))
+      .join(", ");
+    if (!confirm(fmt.summaryRangeOverlapConfirm(overlapLabels))) {
+      return null;
+    }
+  }
+
+  const precedingGaps = getUncoveredVisibleRangesBefore(
+    parsedStart,
+    getContext()?.chat || [],
+  );
+  let allowPrecedingGap = false;
+  if (precedingGaps.length > 0) {
+    allowPrecedingGap = await Popup.show.confirm(
+      "Непокрытая история",
+      fmt.summaryPrecedingGapConfirm(
+        formatCompactSummaryRanges(precedingGaps),
+      ),
+    );
+    if (!allowPrecedingGap) {
+      return null;
+    }
+  }
+
+  return { start, end, allowPrecedingGap };
+}
+
+function setSummaryCreationMode($settingsPanel, mode) {
+  const selectedMode = mode === "generate" ? "generate" : "manual";
+
+  $settingsPanel.find("[data-summary-mode]").each(function () {
+    const isActive = $(this).attr("data-summary-mode") === selectedMode;
+    $(this)
+      .toggleClass("story-summary-mode-option--active", isActive)
+      .attr("aria-pressed", String(isActive));
+  });
+
+  $settingsPanel.find("[data-summary-mode-panel]").each(function () {
+    const isActive = $(this).attr("data-summary-mode-panel") === selectedMode;
+    $(this).toggleClass("story-manager-hidden", !isActive);
+  });
+}
+
+function resetSummaryCreationForm($settingsPanel) {
+  $settingsPanel
+    .find("#story_summary_manual_start, #story_summary_manual_end, #story_summary_manual_text")
+    .val("");
+  $settingsPanel.find("#story_summary_manual_include_hidden").prop("checked", false);
+  setSummaryCreationMode($settingsPanel, "manual");
+  $settingsPanel.find(".story-summary-manual-range").prop("open", false);
+}
+
 export function initSummaryUI($settingsPanel) {
   const s = UI.settings.summary;
 
@@ -184,45 +245,54 @@ export function initSummaryUI($settingsPanel) {
     .find("#story_summary_manual_start, #story_summary_manual_end")
     .attr("max", Math.max(0, chatLength - 1));
 
+  $settingsPanel.find("[data-summary-mode]").on("click", function () {
+    setSummaryCreationMode($settingsPanel, $(this).attr("data-summary-mode"));
+  });
+
+  $settingsPanel.find("#story-summary-manual-save-btn").on("click", async function () {
+    const $btn = $(this);
+    const text = String($settingsPanel.find("#story_summary_manual_text").val() || "").trim();
+    if (!text) {
+      toastSummaryError(UI.summary.manualSaveError, new Error("Вставьте или напишите текст саммари."));
+      return;
+    }
+    const confirmed = await confirmSummaryRangeCreation($settingsPanel);
+    if (!confirmed) return;
+
+    const sourceMode = $settingsPanel
+      .find("#story_summary_manual_include_hidden")
+      .prop("checked")
+      ? "all"
+      : "visible";
+    $btn.prop("disabled", true).text(s.manualSaving);
+    try {
+      const { saveManualSummaryText } = await import("../summary-actions.js");
+      await saveManualSummaryText(confirmed.start, confirmed.end, text, {
+        allowPrecedingGap: confirmed.allowPrecedingGap,
+        sourceMode,
+      });
+      resetSummaryCreationForm($settingsPanel);
+      toastSummarySuccess(UI.summary.manualSaveSuccess);
+    } catch (err) {
+      toastSummaryError(UI.summary.manualSaveError, err);
+    } finally {
+      $btn.prop("disabled", false).text(s.manualSave);
+    }
+  });
+
   $settingsPanel.find("#story-summary-manual-create-btn").on("click", async function () {
     const $btn = $(this);
-    const start = $settingsPanel.find("#story_summary_manual_start").val();
-    const end = $settingsPanel.find("#story_summary_manual_end").val();
-    const parsedStart = Number.parseInt(start, 10);
-    const parsedEnd = Number.parseInt(end, 10);
-    const overlaps = getOverlappingSummaryChunks(parsedStart, parsedEnd);
-
-    if (overlaps.length > 0) {
-      const overlapLabels = overlaps
-        .map((chunk) => formatChunkTitle(chunk.startMes, chunk.endMes))
-        .join(", ");
-      if (!confirm(fmt.summaryRangeOverlapConfirm(overlapLabels))) {
-        return;
-      }
-    }
-
-    const precedingGaps = getUncoveredVisibleRangesBefore(
-      parsedStart,
-      getContext()?.chat || [],
-    );
-    let allowPrecedingGap = false;
-    if (precedingGaps.length > 0) {
-      allowPrecedingGap = await Popup.show.confirm(
-        "Непокрытая история",
-        fmt.summaryPrecedingGapConfirm(
-          formatCompactSummaryRanges(precedingGaps),
-        ),
-      );
-      if (!allowPrecedingGap) {
-        return;
-      }
-    }
+    const confirmed = await confirmSummaryRangeCreation($settingsPanel);
+    if (!confirmed) return;
 
     $btn.prop("disabled", true).text(s.manualInProgress);
     try {
       const { runManualSummaryRange } = await import("../summary-actions.js");
       toastSummaryStart(UI.summary.manualStart);
-      await runManualSummaryRange(start, end, { allowPrecedingGap });
+      await runManualSummaryRange(confirmed.start, confirmed.end, {
+        allowPrecedingGap: confirmed.allowPrecedingGap,
+      });
+      resetSummaryCreationForm($settingsPanel);
       toastSummarySuccess(UI.summary.manualSuccess);
     } catch (err) {
       toastSummaryError(UI.summary.manualError, err);
