@@ -67,7 +67,7 @@ async function loadProfiles({ profile, sendRequest }) {
 test("Custom-профиль использует штатный streaming ST без fallback", async () => {
   const calls = [];
   const h = await loadProfiles({
-    profile: { id: "link", api: "custom", model: "glm", mode: "cc" },
+    profile: { id: "test-profile", api: "custom", model: "test-model", mode: "cc" },
     sendRequest: async (...args) => {
       calls.push(args);
       return async function* stream() {
@@ -86,7 +86,7 @@ test("Custom-профиль использует штатный streaming ST б�
   assert.equal(result, "Summary ready.");
   assert.equal(calls.length, 1);
   assert.equal(h.legacyCalls(), 0);
-  assert.equal(calls[0][0], "link");
+  assert.equal(calls[0][0], "test-profile");
   assert.equal(calls[0][2], 500);
   assert.deepEqual(JSON.parse(JSON.stringify(calls[0][3])), {
     stream: true,
@@ -100,7 +100,7 @@ test("Custom-профиль использует штатный streaming ST б�
 test("ошибка профиля возвращается без второй платной попытки", async () => {
   let serviceCalls = 0;
   const h = await loadProfiles({
-    profile: { id: "link", api: "custom", model: "glm", mode: "cc" },
+    profile: { id: "test-profile", api: "custom", model: "test-model", mode: "cc" },
     sendRequest: async () => {
       serviceCalls += 1;
       throw new Error("API request failed", {
