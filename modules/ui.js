@@ -63,10 +63,15 @@ export async function initUI() {
   const $settingsPanel = createFromTemplate("story-manager-settings-template");
   applySettingsPanelText($settingsPanel);
   $settingsPanelRef = $settingsPanel;
-  const summary = $settingsPanel.find(".story-summary-home")[0];
-  try { summary.open = localStorage.getItem("story-manager.summary-open") !== "false"; } catch {}
-  summary.addEventListener("toggle", () => {
-    try { localStorage.setItem("story-manager.summary-open", String(summary.open)); } catch {}
+  const summary = $settingsPanel.find(".story-summary-home");
+  let expanded = true;
+  try { expanded = localStorage.getItem("story-manager.summary-open") !== "false"; } catch {}
+  summary.children(".inline-drawer-content").toggle(expanded);
+  summary.children(".inline-drawer-header").find(".inline-drawer-icon")
+    .toggleClass("down fa-chevron-down", !expanded).toggleClass("up fa-chevron-up", expanded);
+  summary.children(".inline-drawer-header").on("click", () => {
+    expanded = !expanded;
+    try { localStorage.setItem("story-manager.summary-open", String(expanded)); } catch {}
   });
 
   updateProfilesList($settingsPanel);
@@ -123,7 +128,7 @@ function updateProfilesList($panel) {
   const fixed = getProfileId();
   $select.val(fixed);
   const name = profiles.find(p => p.id === (fixed || getCurrentProfileId()))?.name;
-  $panel.find(".story-profile-label").text(fixed ? "Профиль: " + (name || "не найден") : name ? "Текущий: " + name : "Профиль: текущее подключение");
+  $panel.find(".story-profile-label").text(name || (fixed ? "не найден" : "текущее подключение"));
 }
 
 function updateLorebooksList($panel) {
