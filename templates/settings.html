@@ -10,8 +10,8 @@
       <div class="story-manager-duplicate-install-warning story-manager-hidden" role="alert">
         ⚠️ Найдено несколько копий Story Manager. Оставьте в папке third-party только одну, а резервные версии перенесите в другое место — иначе настройки и автосаммари могут срабатывать дважды.
       </div>
-      <div class="story-manager-section">
-        <h3>⚙️ Общие настройки</h3>
+      <details class="story-manager-section story-profile-settings">
+        <summary aria-label="Общие настройки и профиль"><span class="story-profile-label">Профиль: текущее подключение</span> ⚙</summary>
         <div class="story-manager-block">
           <label for="story_manager_profile"
             ><b>Профиль для генерации:</b></label
@@ -92,101 +92,13 @@
             Резервная копия записей текущего чата и переносимых настроек расширения.
           </p>
         </div>
-      </div>
+      </details>
 
       <div class="story-manager-subsections">
       <div class="story-manager-section">
-        <div class="inline-drawer story-manager-subsection">
-          <div class="inline-drawer-toggle inline-drawer-header">
-            <b>📝 Заметки из сообщений</b>
-            <div
-              class="inline-drawer-icon fa-solid fa-chevron-down down"
-            ></div>
-          </div>
-          <div class="inline-drawer-content">
-            <div id="story-notes-add-form-wrap" class="story-manager-hidden"></div>
-            <div class="story-manager-toolbar">
-              <button
-                id="story-notes-add-btn"
-                type="button"
-                class="menu_button"
-                title="Создать заметку вручную"
-              >
-                ➕ Добавить заметку
-              </button>
-            </div>
-            <h4>Ваши заметки:</h4>
-            <div id="story-notes-container">
-              <i>Здесь будут заметки...</i>
-            </div>
-            <span id="story-notes-token-count" class="story-entity-token-count">
-              0 токенов
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="story-manager-section">
-        <div class="inline-drawer story-manager-subsection">
-          <div class="inline-drawer-toggle inline-drawer-header">
-            <b>👤 Персонажи</b>
-            <div
-              class="inline-drawer-icon fa-solid fa-chevron-down down"
-            ></div>
-          </div>
-          <div class="inline-drawer-content">
-            <div class="story-manager-block">
-              <label for="story_manager_character_context"
-                ><b>Контекст для генерации:</b></label
-              >
-              <select id="story_manager_character_context" class="text_pole">
-                <option value="older">Брать более старые сообщения</option>
-                <option value="newer">Брать более новые сообщения</option>
-              </select>
-            </div>
-            <h4 class="story-manager-block--spaced-top">Карточки персонажей:</h4>
-            <div id="story-characters-container">
-              <i>Здесь будут персонажи...</i>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="story-manager-section">
-        <div class="inline-drawer story-manager-subsection">
-          <div class="inline-drawer-toggle inline-drawer-header">
-            <b>📍 Локации</b>
-            <div
-              class="inline-drawer-icon fa-solid fa-chevron-down down"
-            ></div>
-          </div>
-          <div class="inline-drawer-content">
-            <div class="story-manager-block">
-              <label for="story_manager_location_context"
-                ><b>Контекст для генерации:</b></label
-              >
-              <select id="story_manager_location_context" class="text_pole">
-                <option value="older">Брать более старые сообщения</option>
-                <option value="newer">Брать более новые сообщения</option>
-              </select>
-            </div>
-            <h4 class="story-manager-block--spaced-top">Список локаций:</h4>
-            <div id="story-locations-container">
-              <i>Здесь будут локации...</i>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="story-manager-section">
-        <div class="inline-drawer story-manager-subsection">
-          <div class="inline-drawer-toggle inline-drawer-header">
-            <b>📖 Саммари (Пересказ)</b>
-            <div
-              class="inline-drawer-icon fa-solid fa-chevron-down down"
-            ></div>
-          </div>
-          <div class="inline-drawer-content">
+        <details class="story-manager-subsection story-summary-home" open>
+          <summary>Саммари</summary>
+          <div class="story-summary-home-content">
             <div class="story-manager-block story-summary-enable-row">
               <label class="story-manager-inline-toggle story-summary-context-enable-label" for="story_summary_enabled">
                 <input type="checkbox" id="story_summary_enabled" />
@@ -360,8 +272,92 @@
               </div>
             </details>
           </div>
+        </details>
+      </div>
+      <div class="story-manager-section">
+        <div class="inline-drawer story-manager-subsection">
+          <div class="inline-drawer-toggle inline-drawer-header">
+            <b>📝 Заметки из сообщений</b>
+            <div
+              class="inline-drawer-icon fa-solid fa-chevron-down down"
+            ></div>
+          </div>
+          <div class="inline-drawer-content">
+            <div id="story-notes-add-form-wrap" class="story-manager-hidden"></div>
+            <div class="story-manager-toolbar">
+              <button
+                id="story-notes-add-btn"
+                type="button"
+                class="menu_button"
+                title="Создать заметку вручную"
+              >
+                ➕ Добавить заметку
+              </button>
+            </div>
+            <h4>Ваши заметки:</h4>
+            <div id="story-notes-container">
+              <i>Здесь будут заметки...</i>
+            </div>
+            <span id="story-notes-token-count" class="story-entity-token-count">
+              0 токенов
+            </span>
+          </div>
         </div>
       </div>
+
+      <div class="story-manager-section">
+        <div class="inline-drawer story-manager-subsection">
+          <div class="inline-drawer-toggle inline-drawer-header">
+            <b>👤 Персонажи</b>
+            <div
+              class="inline-drawer-icon fa-solid fa-chevron-down down"
+            ></div>
+          </div>
+          <div class="inline-drawer-content">
+            <div class="story-manager-block">
+              <label for="story_manager_character_context"
+                ><b>Контекст для генерации:</b></label
+              >
+              <select id="story_manager_character_context" class="text_pole">
+                <option value="older">Брать более старые сообщения</option>
+                <option value="newer">Брать более новые сообщения</option>
+              </select>
+            </div>
+            <h4 class="story-manager-block--spaced-top">Карточки персонажей:</h4>
+            <div id="story-characters-container">
+              <i>Здесь будут персонажи...</i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="story-manager-section">
+        <div class="inline-drawer story-manager-subsection">
+          <div class="inline-drawer-toggle inline-drawer-header">
+            <b>📍 Локации</b>
+            <div
+              class="inline-drawer-icon fa-solid fa-chevron-down down"
+            ></div>
+          </div>
+          <div class="inline-drawer-content">
+            <div class="story-manager-block">
+              <label for="story_manager_location_context"
+                ><b>Контекст для генерации:</b></label
+              >
+              <select id="story_manager_location_context" class="text_pole">
+                <option value="older">Брать более старые сообщения</option>
+                <option value="newer">Брать более новые сообщения</option>
+              </select>
+            </div>
+            <h4 class="story-manager-block--spaced-top">Список локаций:</h4>
+            <div id="story-locations-container">
+              <i>Здесь будут локации...</i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
 
       </div>
     </div>
