@@ -10,8 +10,13 @@
       <div class="story-manager-duplicate-install-warning story-manager-hidden" role="alert">
         ⚠️ Найдено несколько копий Story Manager. Оставьте в папке third-party только одну, а резервные версии перенесите в другое место — иначе настройки и автосаммари могут срабатывать дважды.
       </div>
-      <details class="story-manager-section story-profile-settings">
-        <summary aria-label="Общие настройки и профиль"><span class="story-profile-label">Профиль: текущее подключение</span> ⚙</summary>
+      <div class="story-manager-section">
+        <div class="inline-drawer story-manager-subsection">
+        <div class="inline-drawer-toggle inline-drawer-header">
+          <b>⚙️ Профиль подключения: <span class="story-profile-label">текущее подключение</span></b>
+          <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
         <div class="story-manager-block">
           <label for="story_manager_profile"
             ><b>Профиль для генерации:</b></label
@@ -92,13 +97,18 @@
             Резервная копия записей текущего чата и переносимых настроек расширения.
           </p>
         </div>
-      </details>
+        </div>
+        </div>
+      </div>
 
       <div class="story-manager-subsections">
       <div class="story-manager-section">
-        <details class="story-manager-subsection story-summary-home" open>
-          <summary>Саммари</summary>
-          <div class="story-summary-home-content">
+        <div class="inline-drawer story-manager-subsection story-summary-home">
+          <div class="inline-drawer-toggle inline-drawer-header">
+            <b>📖 Саммари</b>
+            <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
+          </div>
+          <div class="inline-drawer-content">
             <div class="story-manager-block story-summary-enable-row">
               <label class="story-manager-inline-toggle story-summary-context-enable-label" for="story_summary_enabled">
                 <input type="checkbox" id="story_summary_enabled" />
@@ -272,7 +282,7 @@
               </div>
             </details>
           </div>
-        </details>
+        </div>
       </div>
       <div class="story-manager-section">
         <div class="inline-drawer story-manager-subsection">
