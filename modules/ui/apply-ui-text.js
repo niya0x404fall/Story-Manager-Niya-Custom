@@ -42,14 +42,14 @@ export function applySettingsPanelText($panel) {
   const $subsections = $root.find(".story-manager-subsections > .story-manager-section");
 
   const n = UI.settings.notes;
-  const $notes = $($subsections[0]);
+  const $notes = $($subsections[1]);
   $notes.find(".inline-drawer-header > b").text(n.sectionTitle);
   $notes.find("#story-notes-add-btn").text(n.addButton).attr("title", n.addTitle);
   $notes.find("h4").text(n.listHeading);
   $notes.find("#story-notes-container i").text(n.empty);
 
   const c = UI.settings.characters;
-  const $chars = $($subsections[1]);
+  const $chars = $($subsections[2]);
   $chars.find(".inline-drawer-header > b").text(c.sectionTitle);
   setLabelText($root, "story_manager_character_context", c.contextLabel);
   setSelectOptions($chars.find("#story_manager_character_context"), [
@@ -60,7 +60,7 @@ export function applySettingsPanelText($panel) {
   $chars.find("#story-characters-container i").text(c.empty);
 
   const l = UI.settings.locations;
-  const $locs = $($subsections[2]);
+  const $locs = $($subsections[3]);
   $locs.find(".inline-drawer-header > b").text(l.sectionTitle);
   setLabelText($root, "story_manager_location_context", l.contextLabel);
   setSelectOptions($locs.find("#story_manager_location_context"), [
@@ -71,7 +71,7 @@ export function applySettingsPanelText($panel) {
   $locs.find("#story-locations-container i").text(l.empty);
 
   const s = UI.settings.summary;
-  const $summary = $($subsections[3]);
+  const $summary = $($subsections[0]);
   $summary.find(".inline-drawer-header > b").text(s.sectionTitle);
   $summary.find(".story-summary-context-enable-label b").text(s.contextEnable);
   $summary.find(".story-summary-auto-enable-label b").text(s.autoEnable);
@@ -128,7 +128,7 @@ export function applyPromptsPopupText($popup) {
   const p = UI.prompts;
   $popup.find(".story-manager-prompts-popup-header > b").text(p.title);
   $popup.find(".story-manager-prompts-close").attr("title", UI.common.close);
-  $popup.find('[data-prompt-reset]').attr("title", UI.common.reset);
+  $popup.find('[data-prompt-reset]').text("Вернуть исходный").attr("title", UI.common.reset);
 
   const blocks = [
     { key: "notePrompt", cfg: p.blocks.note },
