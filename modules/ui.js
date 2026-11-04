@@ -3,7 +3,7 @@ import { world_names } from "../../../../world-info.js";
 import { getSettings, initSettings, saveSettings } from "./settings.js";
 import { getTargetLorebook, setTargetLorebook } from "./chat-settings.js";
 import { loadTemplates, createFromTemplate } from "./templates.js";
-import { getAllProfiles, getProfileId, setProfileId } from "./profiles.js";
+import { getAllProfiles, getCurrentProfileId, getProfileId, setProfileId } from "./profiles.js";
 import { initPromptsManager } from "./ui/prompts.js";
 import {
   MESSAGE_CONTEXT,
@@ -63,11 +63,16 @@ export async function initUI() {
   const $settingsPanel = createFromTemplate("story-manager-settings-template");
   applySettingsPanelText($settingsPanel);
   $settingsPanelRef = $settingsPanel;
-  const settings = getSettings();
+  const summary = $settingsPanel.find(".story-summary-home")[0];
+  try { summary.open = localStorage.getItem("story-manager.summary-open") !== "false"; } catch {}
+  summary.addEventListener("toggle", () => {
+    try { localStorage.setItem("story-manager.summary-open", String(summary.open)); } catch {}
+  });
 
   updateProfilesList($settingsPanel);
   $settingsPanel.find("#story_manager_profile").on("change", function () {
     setProfileId($(this).val());
+    updateProfilesList($settingsPanel);
     saveSettings();
   });
 
@@ -88,8 +93,10 @@ export async function initUI() {
   watchForDuplicateInstallations();
 
   const { eventSource, event_types } = await import("../../../../../script.js");
+  if (event_types.CONNECTION_PROFILE_LOADED) eventSource.on(event_types.CONNECTION_PROFILE_LOADED, () => updateProfilesList($settingsPanel));
   eventSource.on(event_types.EXTENSION_SETTINGS_LOADED, () => {
     initSettings();
+    updateProfilesList($settingsPanel);
     refreshSummarySettingsUI($settingsPanel);
   });
 
@@ -113,7 +120,10 @@ function updateProfilesList($panel) {
   profiles.forEach((p) =>
     $select.append($("<option></option>").val(p.id).text(p.name)),
   );
-  $select.val(getProfileId());
+  const fixed = getProfileId();
+  $select.val(fixed);
+  const name = profiles.find(p => p.id === (fixed || getCurrentProfileId()))?.name;
+  $panel.find(".story-profile-label").text(fixed ? "Профиль: " + (name || "не найден") : name ? "Текущий: " + name : "Профиль: текущее подключение");
 }
 
 function updateLorebooksList($panel) {

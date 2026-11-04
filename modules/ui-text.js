@@ -138,7 +138,7 @@ export const UI = Object.freeze({
       heading: "⚙️ Общие настройки",
       profileLabel: "Профиль для генерации:",
       lorebookLabel: "Лорбук для экспорта:",
-      openPrompts: "⚙️ Менеджер системных промптов",
+      openPrompts: "⚙️ Системные промпты",
       exportData: "💾 Экспорт данных",
       importData: "📂 Импорт данных",
       dataTransferHint:
@@ -380,29 +380,29 @@ export const UI = Object.freeze({
   }),
 
   prompts: Object.freeze({
-    title: "Менеджер системных промптов",
+    title: "Системные промпты",
     resetOne: "Промпт сброшен",
     resetAll: "Все промпты сброшены",
     resetAllButton: "🔄 Сбросить все промпты",
     blocks: Object.freeze({
       note: Object.freeze({
-        label: "Промпт для заметок",
+        label: "Заметки",
         placeholder: "Промпт для заметок",
       }),
       character: Object.freeze({
-        label: "Промпт для персонажей",
+        label: "Персонажи",
         placeholder: "Промпт для персонажей",
       }),
       location: Object.freeze({
-        label: "Промпт для локаций",
+        label: "Локации",
         placeholder: "Промпт для локаций",
       }),
       summary: Object.freeze({
-        label: "Промпт для создания саммари",
+        label: "Создание саммари",
         placeholder: "Промпт для создания саммари",
       }),
       summaryCompress: Object.freeze({
-        label: "Промпт для сжатия саммари",
+        label: "Сжатие саммари",
         placeholder: "Промпт для сжатия саммари",
       }),
     }),
