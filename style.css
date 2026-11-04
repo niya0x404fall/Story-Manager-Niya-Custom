@@ -9,6 +9,20 @@
   min-height: 50px;
 }
 
+.story-profile-settings > summary, .story-summary-home > summary { cursor: pointer; padding: .6em .2em; }
+.story-profile-label { color: var(--SmartThemeQuoteColor); overflow-wrap: anywhere; }
+.story-summary-home > summary { font-weight: 600; }
+#story_manager_prompts_popup { font-family: var(--mainFontFamily, inherit); }
+#story_manager_prompts_popup .story-manager-prompts-popup-body { display:flex; flex-direction:column; }
+#story_manager_prompts_popup .story-manager-prompt-block:has([data-prompt-key="summaryPrompt"]) { order:-2; }
+#story_manager_prompts_popup .story-manager-prompt-block:has([data-prompt-key="summaryCompressPrompt"]) { order:-1; }
+@media (max-width:520px) {
+  #story_manager_prompts_popup .story-manager-prompt-block { flex:none; background:transparent; border:0; border-bottom:1px solid var(--SmartThemeBorderColor); border-radius:0; margin:0; }
+  #story_manager_prompts_popup .story-manager-prompt-block-header { flex-direction:row; align-items:center; padding: .55em .25em; }
+  #story_manager_prompts_popup .story-manager-prompt-block-header b { font:inherit; }
+  #story_manager_prompts_popup .story-manager-prompt-block:not(.story-manager-prompt-block-open) [data-prompt-reset] { display:none; }
+}
+
 .story-manager-section {
   margin: 15px 0;
 }
