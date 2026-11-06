@@ -29,7 +29,7 @@ export function initWorkspaceLayout($panel) {
     $plain.append($content.contents());
     $drawer.replaceWith($plain);
   }
-  arrangeSummaryActions($history, $general);
+  arrangeSummaryActions($history);
   function select(key) {
     for (const [name, $items] of Object.entries(panels)) $items.toggle(name === key);
     $hint.toggle(key === "details");
@@ -40,7 +40,7 @@ export function initWorkspaceLayout($panel) {
   select("history");
 }
 
-function arrangeSummaryActions($history, $general) {
+function arrangeSummaryActions($history) {
   const $panel = $history.children(".story-workspace-panel");
   const $form = $panel.find(".story-summary-manual-range");
   const $toolbar = $('<div class="story-summary-toolbar" role="group" aria-label="Действия с саммари"></div>');
@@ -66,11 +66,13 @@ function arrangeSummaryActions($history, $general) {
     .on("click", () => $form.prop("open", false))
     .appendTo($form.find(".story-summary-manual-range-panel"));
 
-  // Move the existing inputs, preserving their values and their event targets.
-  $general.children(".story-workspace-panel").append(
+  // Automatic summary belongs to History, alongside manual creation.
+  const $automatic = $('<div class="story-summary-automatic"></div>');
+  $automatic.append(
     $panel.find(".story-summary-auto-enable-row"),
     $panel.find(".story-summary-auto-interval"),
-  );
+  ).insertAfter($form);
+  $automatic.find(".story-summary-auto-enable-label b").text("Автосаммари");
   const $heading = $('<div class="story-summary-list-heading"></div>');
   $panel.find(".story-summary-chunks-heading").before($heading).appendTo($heading);
   $panel.find(".story-summary-enable-row").appendTo($heading);
