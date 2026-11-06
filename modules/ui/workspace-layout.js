@@ -16,11 +16,19 @@ export function initWorkspaceLayout($panel) {
     $("<button>", { type: "button", text: title, "aria-pressed": "false" })
       .attr("data-story-view", key).on("click", () => select(key)).appendTo($nav);
   }
-  // Settings and history have their own navigation now; remove only redundant headings.
-  $general.find(".story-manager-subsection").first().children(".inline-drawer-header").hide();
-  $general.find(".story-manager-subsection").first().children(".inline-drawer-content").show();
-  $history.find(".story-summary-home").children(".inline-drawer-header").hide();
-  $history.find(".story-summary-home").children(".inline-drawer-content").show();
+  // These two panels are tabs, not drawers. Keeping drawer wrappers allows
+  // Tavern/theme collapse rules to hide content after our initial .show().
+  for (const [$section, selector] of [
+    [$general, ".story-manager-subsection"],
+    [$history, ".story-summary-home"],
+  ]) {
+    const $drawer = $section.find(selector).first();
+    const $content = $drawer.children(".inline-drawer-content");
+    if (!$content.length) continue;
+    const $plain = $('<div class="story-workspace-panel"></div>');
+    $plain.append($content.contents());
+    $drawer.replaceWith($plain);
+  }
   function select(key) {
     for (const [name, $items] of Object.entries(panels)) $items.toggle(name === key);
     $hint.toggle(key === "details");
