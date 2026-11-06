@@ -1807,3 +1807,29 @@
     opacity: 0.85;
   }
 }
+.story-workspace-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin: 10px 0;
+  border-bottom: 1px solid var(--SmartThemeBorderColor);
+}
+.story-workspace-nav button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+.story-workspace-nav button[aria-pressed="true"] {
+  border-bottom-color: var(--SmartThemeQuoteColor);
+  color: var(--SmartThemeQuoteColor);
+}
+.story-workspace-profile, .story-workspace-hint {
+  font-size: .88em;
+  line-height: 1.45;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
