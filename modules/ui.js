@@ -21,6 +21,7 @@ import {
 import { initDataTransferUI } from "./ui/data-transfer.js";
 import { applySettingsPanelText } from "./ui/apply-ui-text.js";
 import { UI } from "./ui-text.js";
+import { initWorkspaceLayout } from "./ui/workspace-layout.js";
 
 export { renderNotes, renderCharacters, renderLocations, renderSummary };
 
@@ -74,6 +75,8 @@ export async function initUI() {
     try { localStorage.setItem("story-manager.summary-open", String(expanded)); } catch {}
   });
 
+  updateProfilesList($settingsPanel);
+  initWorkspaceLayout($settingsPanel);
   updateProfilesList($settingsPanel);
   $settingsPanel.find("#story_manager_profile").on("change", function () {
     setProfileId($(this).val());
