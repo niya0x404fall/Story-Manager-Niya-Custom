@@ -53,7 +53,8 @@ function arrangeSummaryActions($history) {
     ["story-summary-rebuild-btn", "Пересоздать"],
   ];
   for (const [id, label] of actions) {
-    $panel.find(`#${id}`).text(label).appendTo($toolbar);
+    $panel.find(`#${id}`).text(label).removeClass("menu_button story-summary-mode-option story-summary-mode-option--active")
+      .addClass("story-summary-action-button").appendTo($toolbar);
   }
   $panel.prepend($toolbar);
   $form.insertAfter($toolbar).addClass("story-summary-inline-form");
@@ -71,14 +72,15 @@ function arrangeSummaryActions($history) {
   $automatic.append(
     $panel.find(".story-summary-auto-enable-row"),
     $panel.find(".story-summary-auto-interval"),
-  ).insertAfter($form);
+  ).prependTo($panel);
   $automatic.find(".story-summary-auto-enable-label b").text("Автосаммари");
   const $heading = $('<div class="story-summary-list-heading"></div>');
   $panel.find(".story-summary-chunks-heading").before($heading).appendTo($heading);
-  $panel.find(".story-summary-enable-row").appendTo($heading);
-  $heading.find("b").text("В контексте");
-  $heading.find("label").attr("title", "Использовать сохранённые саммари в контексте модели");
+  const $context = $panel.find(".story-summary-enable-row").insertAfter($automatic);
+  $context.find("b").text("В контексте");
+  $context.find("label").attr("title", "Использовать сохранённые саммари в контексте модели");
   $panel.find(".story-summary-selection-hint").hide();
   $panel.find("#story-summary-rollback-btn").insertAfter($panel.find("#story-summary-token-count"));
   $panel.find(".story-summary-maintenance").remove();
+  $panel.append($toolbar, $form);
 }
