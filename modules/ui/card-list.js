@@ -211,15 +211,26 @@ export async function renderCardList(config) {
   }
 
   if (bodySelector && expandSelector) {
+    const toggleExpanded = ($item) => {
+      $item.find(bodySelector).stop(true, true).slideToggle(200);
+      $item.find(expandSelector)
+        .toggleClass("fa-circle-chevron-down fa-circle-chevron-up");
+    };
+
+    // Стрелка находится внутри .story-note-actions, поэтому обработчик
+    // заголовка её намеренно пропускает. Обрабатываем её отдельно.
+    container.on(`click${eventNamespace}`, expandSelector, function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleExpanded($(this).closest(itemSelector));
+    });
+
     container.on(`click${eventNamespace}`, headerSelector, function (e) {
-      if ($(e.target).closest(expandIgnoreSelector).length) {
+      if ($(e.target).closest(`${expandIgnoreSelector}, ${expandSelector}`).length) {
         return;
       }
 
-      $(this).closest(itemSelector).find(bodySelector).slideToggle(200);
-      $(this)
-        .find(expandSelector)
-        .toggleClass("fa-circle-chevron-down fa-circle-chevron-up");
+      toggleExpanded($(this).closest(itemSelector));
     });
   }
 
