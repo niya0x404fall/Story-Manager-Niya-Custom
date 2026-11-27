@@ -1,4 +1,4 @@
-import { injectAllEntities } from "../injection.js";
+import { injectAllEntities, isSummaryMacroAvailable } from "../injection.js";
 import { getSettings, saveSettings } from "../settings.js";
 import { getContext } from "../../../../../extensions.js";
 import { Popup } from "../../../../../popup.js";
@@ -23,9 +23,17 @@ import {
 } from "./toasts.js";
 
 function updateSummaryInjectionControls($settingsPanel) {
-  const position = $settingsPanel.find("#story_manager_summary_injection_position").val();
+  // Native value остаётся читаемым и у сохранённого disabled-пункта.
+  const position = $settingsPanel.find("#story_manager_summary_injection_position").prop("value");
+  const available = isSummaryMacroAvailable();
+  const useMacro = position === "preset_macro" && available;
+  $settingsPanel.find('#story_manager_summary_injection_position option[value="preset_macro"]')
+    .prop("disabled", !available);
   $settingsPanel.find(".story-summary-depth-field").toggle(position === "chat_depth");
   $settingsPanel.find(".story-summary-depth-hint").toggle(position === "chat_depth");
+  $settingsPanel.find(".story-summary-role-field").toggle(!useMacro);
+  $settingsPanel.find(".story-summary-macro-hint").toggle(useMacro);
+  $settingsPanel.find(".story-summary-macro-unavailable").toggle(position === "preset_macro" && !available);
 }
 
 function updateSummaryAutoControls($settingsPanel) {

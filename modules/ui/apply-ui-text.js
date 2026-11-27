@@ -38,6 +38,8 @@ export function applySettingsPanelText($panel) {
   $general.find('label[for="story_manager_summary_injection_role"] span').text(g.injectionRole);
   $general.find(".story-summary-injection-hint").text(g.injectionHint);
   $general.find(".story-summary-depth-hint").text(g.depthHint);
+  $general.find(".story-summary-macro-hint").text(g.macroHint);
+  $general.find(".story-summary-macro-unavailable").text(g.macroUnavailable);
 
   const $subsections = $root.find(".story-manager-subsections > .story-manager-section");
 
