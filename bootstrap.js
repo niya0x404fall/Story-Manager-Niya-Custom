@@ -2,6 +2,7 @@ import { refreshFromChatState } from "./app/chat-refresh.js";
 import { registerEvents } from "./events/register-events.js";
 import { initButtons } from "./modules/buttons.js";
 import { initSettings } from "./modules/settings.js";
+import { registerSummaryMacro } from "./modules/injection.js";
 import { initUI } from "./modules/ui.js";
 
 let initialized = false;
@@ -18,6 +19,7 @@ async function initializeExtension() {
 
   try {
     initSettings();
+    registerSummaryMacro();
     await initUI();
     initButtons();
 
