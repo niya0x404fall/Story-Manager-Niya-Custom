@@ -67,20 +67,21 @@ function arrangeSummaryActions($history) {
     .on("click", () => $form.prop("open", false))
     .appendTo($form.find(".story-summary-manual-range-panel"));
 
-  // Keep saved memory and its actions first; automatic creation is optional.
+  // Context toggle first, automatic generation settings second, saved cards below.
   const $automatic = $('<div class="story-summary-automatic"></div>');
   $automatic.append(
     $panel.find(".story-summary-auto-enable-row"),
     $panel.find(".story-summary-auto-interval"),
-  ).appendTo($panel);
+  );
   $automatic.find(".story-summary-auto-enable-label b").text("Автосаммари");
   const $heading = $('<div class="story-summary-list-heading"></div>');
   $panel.find(".story-summary-chunks-heading").before($heading).appendTo($heading);
   const $context = $panel.find(".story-summary-enable-row").prependTo($panel);
+  $automatic.insertAfter($context);
   $context.find("b").text("В контексте");
   $context.find("label").attr("title", "Использовать сохранённые саммари в контексте модели");
   $panel.find(".story-summary-selection-hint").hide();
   $panel.find("#story-summary-rollback-btn").insertAfter($panel.find("#story-summary-token-count"));
   $panel.find(".story-summary-maintenance").remove();
-  $panel.append($toolbar, $form, $automatic);
+  $panel.append($toolbar, $form);
 }
