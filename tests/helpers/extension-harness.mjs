@@ -9,12 +9,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 export function createExtensionHarness({ chat = [], chunks = [], settings = {} } = {}) {
   const state = {
     context: { chat, chatMetadata: { "story-manager-summary-chunks": chunks } },
-    calls: [], saves: 0,
+    calls: [], saves: 0, promptCalls: [], extensionPrompts: new Map(),
     reply: async () => "[10:24] A test event occurred.",
     extensionSettings: { "story-manager": settings },
   };
   const sandbox = vm.createContext({
     console, AbortController, DOMException, setTimeout, clearTimeout,
+    SillyTavern: { getContext: () => state.context },
     // Тест не имеет доступа к сети даже при случайно неверном импорте.
     fetch: () => { throw new Error("Network forbidden in tests"); },
   });
@@ -34,9 +35,12 @@ export function createExtensionHarness({ chat = [], chunks = [], settings = {} }
     "extensions.js": { getContext: () => state.context, extension_settings: state.extensionSettings },
     "script.js": {
       saveSettingsDebounced: () => {},
-      setExtensionPrompt: () => {},
+      setExtensionPrompt: (...args) => {
+        state.promptCalls.push(args);
+        state.extensionPrompts.set(args[0], args[1]);
+      },
       extension_prompt_roles: { SYSTEM: 0, USER: 1, ASSISTANT: 2 },
-      extension_prompt_types: { IN_PROMPT: 0, IN_CHAT: 1 },
+      extension_prompt_types: { IN_PROMPT: 0, IN_CHAT: 1, BEFORE_PROMPT: 2 },
     },
     "reasoning.js": { removeReasoningFromString: (value) => value },
     "utils.js": { createTimeout: () => new Promise(() => {}) },
