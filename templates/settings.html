@@ -50,6 +50,7 @@
             <option value="main_prompt">Main Prompt</option>
             <option value="before_prompt">Перед Main Prompt</option>
             <option value="chat_depth">В историю чата (Depth)</option>
+            <option value="preset_macro">Через макрос в пресете</option>
           </select>
           <div class="story-summary-injection-extra">
             <label class="story-summary-depth-field" for="story_manager_summary_injection_depth">
@@ -62,7 +63,7 @@
                 max="10000"
               />
             </label>
-            <label for="story_manager_summary_injection_role">
+            <label class="story-summary-role-field" for="story_manager_summary_injection_role">
               <span>Роль:</span>
               <select id="story_manager_summary_injection_role" class="text_pole">
                 <option value="system">System</option>
@@ -76,6 +77,12 @@
           </p>
           <p class="story-manager-hint story-summary-depth-hint">
             Depth 0 — после всей истории; 1 — перед последним сообщением; 4 — перед четырьмя последними сообщениями.
+          </p>
+          <p class="story-manager-hint story-summary-macro-hint" style="display: none">
+            Добавьте &#123;&#123;story_manager_summary&#125;&#125; в отдельный включённый блок Prompt Manager вашего пресета и поставьте его перед Chat History. Роль выберите в этом блоке. Без блока память не отправляется; обычная вставка отключена.
+          </p>
+          <p class="story-manager-hint story-summary-macro-unavailable" style="display: none" role="alert">
+            Макрос недоступен в этой установке SillyTavern. Саммари отправляется обычным способом в Main Prompt. Выберите другой режим вставки или обновите SillyTavern.
           </p>
         </div>
         <div class="story-manager-block story-manager-data-transfer">
