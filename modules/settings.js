@@ -367,6 +367,7 @@ function normalizeSettings(rawSettings = {}) {
     "main_prompt",
     "before_prompt",
     "chat_depth",
+    "preset_macro",
   ]);
   if (!summaryInjectionPositions.has(settings.summaryInjectionPosition)) {
     settings.summaryInjectionPosition = defaultSettings.summaryInjectionPosition;
